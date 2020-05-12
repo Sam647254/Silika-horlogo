@@ -44,7 +44,7 @@ class SilicanClockViewModel : ViewModel() {
 
 data class SilicanTime(val phase: Int, val hour: Int, val minute: Int)
 
-data class SilicanDate(val year: Int, val month: Int, val day: Int) {
+data class SilicanDate(val year: Int, val season: Int, val week: Int, val weekday: Int) {
     companion object {
         fun fromGregorian(date: LocalDate): SilicanDate {
             val difference = Days.daysBetween(syncPoint, date).days
@@ -59,13 +59,46 @@ data class SilicanDate(val year: Int, val month: Int, val day: Int) {
             val remainingDays = remain5 % 364
             val year = years400 * 400 + years40 * 40 + years5 * 5 + Math.min(remainingYears, 5)
             val dayOfYear = if (remainingYears == 6) 364 + remainingDays else remainingDays
-            val month = dayOfYear / 28
+            val season = if (dayOfYear > 364) 4 else dayOfYear / (364 / 4) + 1
+            val dayOfSeason = if (dayOfYear > 364) 364 / 4 + dayOfYear % (364 / 4) else dayOfYear % (364 / 4)
+            val weekOfSeason = dayOfSeason / 7 + 1
+            val dayOfWeek = dayOfYear % 7 + 1
             val day = (dayOfYear % 28) + 1
             return SilicanDate(
                 year + 1,
-                min(month + 1, 13),
-                if (month == 13) day + 28 else day
+                season,
+                weekOfSeason,
+                dayOfWeek
             )
         }
+
+        private val seasons = listOf("Nevari", "Penari", "Sevari", "Venari")
+        private val weeks = listOf(
+            "Ateluna",
+            "Beviruto",
+            "Deruna",
+            "Elito",
+            "Feridina",
+            "Geranito",
+            "Lunamarina",
+            "Miraliluto",
+            "Peridina",
+            "Samerito",
+            "Timina",
+            "Verato",
+            "Wilaluna",
+            "Zeroto"
+        )
+        private val weekdays = listOf(
+            "Boromika",
+            "Ferimanika",
+            "Lusinika",
+            "Navimilika",
+            "Perinatika",
+            "Relikanika",
+            "Temiranika"
+        )
     }
+
+    val textDate get() = "${seasons[season - 1]} ${weeks[week - 1]} ${weekdays[weekday - 1]}"
 }
