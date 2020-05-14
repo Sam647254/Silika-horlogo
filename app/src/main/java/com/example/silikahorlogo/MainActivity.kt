@@ -3,6 +3,7 @@ package com.example.silikahorlogo
 import android.os.Bundle
 import android.view.View
 import android.view.Window
+import android.view.WindowManager
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.Composable
@@ -10,6 +11,7 @@ import androidx.lifecycle.Observer
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
 import androidx.ui.core.setContent
+import androidx.ui.foundation.Box
 import androidx.ui.foundation.Image
 import androidx.ui.foundation.Text
 import androidx.ui.graphics.Color
@@ -49,6 +51,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestWindowFeature(Window.FEATURE_NO_TITLE)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         clockViewModel.currentDate.observe(this, Observer { (date, time) ->
             setContent {
                 SilikaHorloĝoTheme(darkTheme = true) {
@@ -77,10 +80,13 @@ class MainActivity : AppCompatActivity() {
                                 horizontalGravity = Alignment.CenterHorizontally
                             ) {
                                 Column(Modifier.offset(y = 60.dp)) {
-                                    Text(
-                                        date.year.toString(), style = TextStyle(fontSize = 46.sp),
-                                        fontFamily = Saira
-                                    )
+                                    Box(Modifier.offset(y = 20.dp)) {
+                                        Text(
+                                            date.year.toString(),
+                                            style = TextStyle(fontSize = 46.sp),
+                                            fontFamily = Saira
+                                        )
+                                    }
                                     Text(
                                         date.textDate, style = TextStyle(fontSize = 54.sp),
                                         fontFamily = Saira
