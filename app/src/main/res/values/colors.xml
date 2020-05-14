@@ -7,4 +7,16 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <color name="lavender">#FFC787E7</color>
+    <color name="carnation">#FFD75787</color>
+    <color name="sapphire">#FF077CE7</color>
+    <color name="ruby">#FFC70707</color>
+    <color name="amber">#FFD77D07</color>
+    <color name="fern">#FF079727</color>
+    <color name="slate">#FFA7A7B7</color>
+
+    <color name="serenity">#FF38B0E8</color>
+    <color name="fervidity">#FFE84848</color>
+    <color name="chaos">#FF895A04</color>
 </resources>
