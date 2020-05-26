@@ -58,8 +58,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        clockViewModel.currentDate.observe(this, Observer { (date, time) ->
+        clockViewModel.currentDate.observe(this, Observer { state ->
             val today = LocalDate.now()
+            val date = state.date
+            val time = state.time
             setContent {
                 SilikaHorloĝoTheme(darkTheme = true) {
                     Surface {
@@ -107,7 +109,7 @@ class MainActivity : AppCompatActivity() {
                                     Text(
                                         "${time.hour} ${time.minute.toString()
                                             .padStart(2, '0')}",
-                                        fontSize = 260.sp,
+                                        fontSize = 240.sp,
                                         fontFamily = SairaSemibold,
                                         style = TimeShadow
                                     )
@@ -123,7 +125,7 @@ class MainActivity : AppCompatActivity() {
                                     fontSize = 100.sp,
                                     fontFamily = Saira,
                                     style = shadow,
-                                    modifier = Modifier.offset(y = 30.dp)
+                                    modifier = Modifier.offset(y = 25.dp)
                                 )
                                 Text(
                                     text = "days since shelter-in-place",
@@ -131,6 +133,27 @@ class MainActivity : AppCompatActivity() {
                                     fontFamily = Saira,
                                     style = shadow
                                 )
+                            }
+                            state.casesCount?.let {
+                                Column(
+                                    Modifier.padding(end = 10.dp, bottom = 10.dp).fillMaxSize(),
+                                    horizontalGravity = Alignment.End,
+                                    verticalArrangement = Arrangement.Bottom
+                                ) {
+                                    Text(
+                                        text = "${it.total} (+${it.new})",
+                                        fontSize = 100.sp,
+                                        fontFamily = Saira,
+                                        style = shadow,
+                                        modifier = Modifier.offset(y = 25.dp)
+                                    )
+                                    Text(
+                                        text = "cases in Santa Clara as of ${SilicanDate.fromGregorian(it.date.toLocalDate()).shortDate}",
+                                        fontSize = 20.sp,
+                                        fontFamily = Saira,
+                                        style = shadow
+                                    )
+                                }
                             }
                         }
                     }

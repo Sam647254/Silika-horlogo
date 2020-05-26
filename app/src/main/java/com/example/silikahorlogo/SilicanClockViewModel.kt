@@ -4,8 +4,16 @@ import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.joda.time.*
 import org.joda.time.field.MillisDurationField
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
 import kotlin.math.min
 
 internal val syncPoint = LocalDate(2018, 1, 1)
@@ -15,22 +23,26 @@ internal const val daysIn40Years = 40 * 364 + 7 * (40 / 5 - 1)
 internal const val daysIn5Years = 5 * 364 + 7
 
 class SilicanClockViewModel : ViewModel() {
-    val currentDate = MutableLiveData<Pair<SilicanDate, SilicanTime>>()
+    val currentDate = MutableLiveData<State>()
+    var state: State = State(
+        SilicanDate.fromGregorian(LocalDate.now()),
+        SilicanTime.fromStandard(LocalTime.now()),
+        null
+    )
+        set(value) {
+            field = value
+            currentDate.postValue(value)
+        }
 
     init {
         val handler = Handler(Looper.getMainLooper())
         val updater = object : Runnable {
             override fun run() {
                 val now = LocalTime.now()
-                val hour = now.hourOfDay % 8
-                val phase = now.hourOfDay / 8
-                currentDate.postValue(
-                    SilicanDate.fromGregorian(
-                        LocalDate.now()
-                    ) to SilicanTime(
-                        phase,
-                        hour,
-                        now.minuteOfHour
+                state = state.copy(
+                    date = SilicanDate.fromGregorian(LocalDate.now()),
+                    time = SilicanTime.fromStandard(
+                        LocalTime.now()
                     )
                 )
                 val nextMinute =
@@ -39,10 +51,52 @@ class SilicanClockViewModel : ViewModel() {
             }
         }
         updater.run()
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                fetchCasesCount()?.let {
+                    state = state.copy(casesCount = it)
+                }
+            }
+        }
+    }
+
+    private fun fetchCasesCount(): CasesCount? {
+        val url = URL(
+            "https://data.ca.gov/api/3/action/datastore_search_sql?sql=select " +
+                    "totalcountconfirmed, newcountconfirmed, date from " +
+                    "\"926fd08f-cc91-4828-af38-bd45de97f8c3\" where county = 'Santa Clara' order by " +
+                    "date desc limit 1"
+        )
+        return (url.openConnection() as? HttpURLConnection)?.run {
+            requestMethod = "GET"
+            inputStream.bufferedReader().readText().let(::JSONObject).getJSONObject("result")
+                .getJSONArray("records")
+                .getJSONObject(0)
+                .let { result ->
+                    CasesCount(
+                        result.getString("totalcountconfirmed").let(String::toFloat).toInt(),
+                        result.getString("newcountconfirmed").let(String::toInt),
+                        result.getString("date").let(LocalDateTime::parse)
+                    )
+                }
+        }
     }
 }
 
-data class SilicanTime(val phase: Int, val hour: Int, val minute: Int)
+data class State(val date: SilicanDate, val time: SilicanTime, val casesCount: CasesCount?)
+
+data class SilicanTime(val phase: Int, val hour: Int, val minute: Int) {
+    companion object {
+        fun fromStandard(time: LocalTime): SilicanTime {
+            val now = LocalTime.now()
+            val hour = now.hourOfDay % 8
+            val phase = now.hourOfDay / 8
+            return SilicanTime(phase, hour, now.minuteOfHour)
+        }
+    }
+}
+
+data class CasesCount(val total: Int, val new: Int, val date: LocalDateTime)
 
 data class SilicanDate(val year: Int, val season: Int, val week: Int, val weekday: Int) {
     companion object {
@@ -60,7 +114,8 @@ data class SilicanDate(val year: Int, val season: Int, val week: Int, val weekda
             val year = years400 * 400 + years40 * 40 + years5 * 5 + Math.min(remainingYears, 5)
             val dayOfYear = if (remainingYears == 6) 364 + remainingDays else remainingDays
             val season = if (dayOfYear > 364) 4 else dayOfYear / (364 / 4) + 1
-            val dayOfSeason = if (dayOfYear > 364) 364 / 4 + dayOfYear % (364 / 4) else dayOfYear % (364 / 4)
+            val dayOfSeason =
+                if (dayOfYear > 364) 364 / 4 + dayOfYear % (364 / 4) else dayOfYear % (364 / 4)
             val weekOfSeason = dayOfSeason / 7 + 1
             val dayOfWeek = dayOfYear % 7 + 1
             val day = (dayOfYear % 28) + 1
@@ -101,4 +156,5 @@ data class SilicanDate(val year: Int, val season: Int, val week: Int, val weekda
     }
 
     val textDate get() = "${seasons[season - 1]} ${weeks[week - 1]} ${weekdays[weekday - 1]}"
+    val shortDate get() = "$year ${seasons[season - 1][0]}${weeks[week - 1][0]}${weekdays[weekday - 1][0]}"
 }
