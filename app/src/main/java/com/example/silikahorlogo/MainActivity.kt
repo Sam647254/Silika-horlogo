@@ -27,11 +27,14 @@ import androidx.ui.tooling.preview.Preview
 import androidx.ui.unit.dp
 import androidx.ui.unit.sp
 import com.example.silikahorlogo.ui.SilikaHorloĝoTheme
+import org.joda.time.Days
+import org.joda.time.LocalDate
 
 private val Saira = fontFamily(ResourceFont(R.font.saira_regular))
 private val SairaSemibold = fontFamily(ResourceFont(R.font.saira_semibold))
 private val TimeShadow = TextStyle(shadow = Shadow(color = Color.White, blurRadius = 10F))
 private val shadow = TextStyle(shadow = Shadow(color = Color.White, blurRadius = 3F))
+private val startOfShelterInPlace = LocalDate(2020, 3, 3)
 
 private val weekdayColours = listOf(
     R.color.lavender,
@@ -56,6 +59,7 @@ class MainActivity : AppCompatActivity() {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         clockViewModel.currentDate.observe(this, Observer { (date, time) ->
+            val today = LocalDate.now()
             setContent {
                 SilikaHorloĝoTheme(darkTheme = true) {
                     Surface {
@@ -82,11 +86,13 @@ class MainActivity : AppCompatActivity() {
                                 verticalArrangement = Arrangement.Center,
                                 horizontalGravity = Alignment.CenterHorizontally
                             ) {
-                                Column {
-                                    Box(Modifier.offset(y = 10.dp)) {
+                                Column(
+                                    horizontalGravity = Alignment.CenterHorizontally
+                                ) {
+                                    Box(Modifier.offset(y = 5.dp)) {
                                         Text(
                                             date.year.toString(),
-                                            fontSize = 46.sp,
+                                            fontSize = 36.sp,
                                             style = shadow,
                                             fontFamily = Saira
                                         )
@@ -99,12 +105,32 @@ class MainActivity : AppCompatActivity() {
                                 }
                                 Box(Modifier.offset(y = (-50).dp)) {
                                     Text(
-                                        "${time.hour} ${time.minute.toString().padStart(2, '0')}",
+                                        "${time.hour} ${time.minute.toString()
+                                            .padStart(2, '0')}",
                                         fontSize = 260.sp,
                                         fontFamily = SairaSemibold,
                                         style = TimeShadow
                                     )
                                 }
+                            }
+                            Column(
+                                modifier = Modifier.padding(start = 10.dp, bottom = 10.dp)
+                                    .fillMaxSize(),
+                                verticalArrangement = Arrangement.Bottom
+                            ) {
+                                Text(
+                                    text = "${Days.daysBetween(startOfShelterInPlace, today).days}",
+                                    fontSize = 100.sp,
+                                    fontFamily = Saira,
+                                    style = shadow,
+                                    modifier = Modifier.offset(y = 30.dp)
+                                )
+                                Text(
+                                    text = "days since shelter-in-place",
+                                    fontSize = 20.sp,
+                                    fontFamily = Saira,
+                                    style = shadow
+                                )
                             }
                         }
                     }
