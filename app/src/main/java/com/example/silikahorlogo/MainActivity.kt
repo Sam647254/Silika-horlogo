@@ -16,6 +16,7 @@ import androidx.ui.foundation.Image
 import androidx.ui.foundation.Text
 import androidx.ui.graphics.Color
 import androidx.ui.graphics.ColorFilter
+import androidx.ui.graphics.Shadow
 import androidx.ui.graphics.imageFromResource
 import androidx.ui.layout.*
 import androidx.ui.material.Surface
@@ -29,6 +30,8 @@ import com.example.silikahorlogo.ui.SilikaHorloĝoTheme
 
 private val Saira = fontFamily(ResourceFont(R.font.saira_regular))
 private val SairaSemibold = fontFamily(ResourceFont(R.font.saira_semibold))
+private val TimeShadow = TextStyle(shadow = Shadow(color = Color.White, blurRadius = 10F))
+private val shadow = TextStyle(shadow = Shadow(color = Color.White, blurRadius = 3F))
 
 private val weekdayColours = listOf(
     R.color.lavender,
@@ -79,24 +82,29 @@ class MainActivity : AppCompatActivity() {
                                 verticalArrangement = Arrangement.Center,
                                 horizontalGravity = Alignment.CenterHorizontally
                             ) {
-                                Column(Modifier.offset(y = 60.dp)) {
-                                    Box(Modifier.offset(y = 20.dp)) {
+                                Column {
+                                    Box(Modifier.offset(y = 10.dp)) {
                                         Text(
                                             date.year.toString(),
-                                            style = TextStyle(fontSize = 46.sp),
+                                            fontSize = 46.sp,
+                                            style = shadow,
                                             fontFamily = Saira
                                         )
                                     }
                                     Text(
-                                        date.textDate, style = TextStyle(fontSize = 54.sp),
-                                        fontFamily = Saira
+                                        date.textDate, fontSize = 54.sp,
+                                        fontFamily = Saira,
+                                        style = shadow
                                     )
                                 }
-                                Text(
-                                    "${time.hour} ${time.minute.toString().padStart(2, '0')}",
-                                    fontSize = 260.sp,
-                                    fontFamily = SairaSemibold
-                                )
+                                Box(Modifier.offset(y = (-50).dp)) {
+                                    Text(
+                                        "${time.hour} ${time.minute.toString().padStart(2, '0')}",
+                                        fontSize = 260.sp,
+                                        fontFamily = SairaSemibold,
+                                        style = TimeShadow
+                                    )
+                                }
                             }
                         }
                     }
