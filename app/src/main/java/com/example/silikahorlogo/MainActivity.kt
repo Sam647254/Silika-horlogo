@@ -94,17 +94,30 @@ fun DefaultPreview() {
 @Composable
 fun AwairDataField(value: String, label: String, unit: String = "") {
     Column(horizontalGravity = Alignment.CenterHorizontally) {
-        Text(annotatedString {
-            pushStyle(SpanStyle(fontSize = 50.sp))
-            append(value)
-            if (unit.isNotEmpty()) {
-                pop()
-                pushStyle(SpanStyle(fontSize = 25.sp))
-                append(' ')
-                append(unit)
-            }
-        }, fontFamily = Saira, style = shadow, modifier = Modifier.padding(horizontal = 15.dp))
-        Text(label, fontSize = 20.sp, fontFamily = Saira, style = shadow, modifier = Modifier.offset(y = (-10).dp))
+        Text(
+            annotatedString {
+                pushStyle(SpanStyle(fontSize = 50.sp))
+                append(value)
+                if (unit.isNotEmpty()) {
+                    pop()
+                    pushStyle(SpanStyle(fontSize = 25.sp))
+                    append(' ')
+                    append(unit)
+                }
+            },
+            fontFamily = Saira,
+            style = shadow,
+            modifier = Modifier.padding(horizontal = 15.dp),
+            maxLines = 1,
+            softWrap = false
+        )
+        Text(
+            label,
+            fontSize = 20.sp,
+            fontFamily = Saira,
+            style = shadow,
+            modifier = Modifier.offset(y = (-10).dp)
+        )
     }
 }
 
@@ -135,7 +148,10 @@ fun Clock(context: Context, state: State) {
                     )
                 )
                 state.awairData?.let { data ->
-                    Row(modifier = Modifier.padding(vertical = 10.dp).fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                    Row(
+                        modifier = Modifier.padding(vertical = 10.dp).fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
                         AwairDataField(value = data.score.toString(), label = "Score")
                         AwairDataField(
                             value = "%.1f".format(data.temperature),

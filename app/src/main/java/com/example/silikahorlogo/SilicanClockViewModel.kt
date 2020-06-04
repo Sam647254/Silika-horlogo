@@ -36,7 +36,6 @@ class SilicanClockViewModel : ViewModel() {
     init {
         val handler = Handler(Looper.getMainLooper())
         val awairUpdater = Runnable {
-            Log.d("123", "Updating Awair")
             viewModelScope.launch {
                 withContext(Dispatchers.IO) {
                     val awair = fetchAwairData()
@@ -77,7 +76,10 @@ class SilicanClockViewModel : ViewModel() {
                 }
                 val now = LocalDateTime.now()
                 val nextUpdate = LocalDate.now().plusDays(1).toLocalDateTime(LocalTime.MIDNIGHT)
-                handler.postDelayed(this, Period(now, nextUpdate).millis.toLong())
+                handler.postDelayed(
+                    this,
+                    Period(now, nextUpdate, PeriodType.millis()).millis.toLong()
+                )
             }
         }
         casesCountUpdater.run()
