@@ -2,19 +2,17 @@ package com.example.silikahorlogo
 
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.joda.time.*
-import org.joda.time.field.MillisDurationField
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
-import kotlin.math.min
 
 internal val syncPoint = LocalDate(2018, 1, 1)
 internal const val syncDayNumber = 12017 * 364 + 7 * ((12017 / 5) - (12017 / 40) + (12017 / 400))
@@ -27,6 +25,7 @@ class SilicanClockViewModel : ViewModel() {
     var state: State = State(
         SilicanDate.fromGregorian(LocalDate.now()),
         SilicanTime.fromStandard(LocalTime.now()),
+        null,
         null
     )
         set(value) {
@@ -36,8 +35,20 @@ class SilicanClockViewModel : ViewModel() {
 
     init {
         val handler = Handler(Looper.getMainLooper())
-        val updater = object : Runnable {
+        val awairUpdater = Runnable {
+            Log.d("123", "Updating Awair")
+            viewModelScope.launch {
+                withContext(Dispatchers.IO) {
+                    val awair = fetchAwairData()
+                    state = state.copy(
+                        awairData = awair
+                    )
+                }
+            }
+        }
+        val clockUpdater = object : Runnable {
             override fun run() {
+                awairUpdater.run()
                 val now = LocalTime.now()
                 state = state.copy(
                     date = SilicanDate.fromGregorian(LocalDate.now()),
@@ -47,14 +58,45 @@ class SilicanClockViewModel : ViewModel() {
                 )
                 val nextMinute =
                     now.withFieldAdded(DurationFieldType.minutes(), 1).withSecondOfMinute(0)
-                handler.postDelayed(this, Period(now, nextMinute).millis.toLong())
+                handler.postDelayed(
+                    this,
+                    Period(now, nextMinute, PeriodType.millis()).millis.toLong()
+                )
             }
         }
-        updater.run()
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                fetchCasesCount()?.let {
-                    state = state.copy(casesCount = it)
+        awairUpdater.run()
+        clockUpdater.run()
+        val casesCountUpdater = object : Runnable {
+            override fun run() {
+                viewModelScope.launch {
+                    withContext(Dispatchers.IO) {
+                        fetchCasesCount()?.let {
+                            state = state.copy(casesCount = it)
+                        }
+                    }
+                }
+                val now = LocalDateTime.now()
+                val nextUpdate = LocalDate.now().plusDays(1).toLocalDateTime(LocalTime.MIDNIGHT)
+                handler.postDelayed(this, Period(now, nextUpdate).millis.toLong())
+            }
+        }
+        casesCountUpdater.run()
+    }
+
+    private fun fetchAwairData(): AwairData? {
+        val url = URL("http://awair-elem-14041c/air-data/latest")
+        return (url.openConnection() as? HttpURLConnection)?.run {
+            requestMethod = "GET"
+            inputStream.bufferedReader().use {
+                it.readText().let(::JSONObject).let { response ->
+                    AwairData(
+                        response.getInt("score"),
+                        response.getDouble("temp"),
+                        response.getDouble("humid"),
+                        response.getInt("co2"),
+                        response.getInt("voc"),
+                        response.getInt("pm25")
+                    )
                 }
             }
         }
@@ -83,7 +125,21 @@ class SilicanClockViewModel : ViewModel() {
     }
 }
 
-data class State(val date: SilicanDate, val time: SilicanTime, val casesCount: CasesCount?)
+data class State(
+    val date: SilicanDate,
+    val time: SilicanTime,
+    val casesCount: CasesCount?,
+    val awairData: AwairData?
+)
+
+data class AwairData(
+    val score: Int,
+    val temperature: Double,
+    val humidity: Double,
+    val co2: Int,
+    val voc: Int,
+    val pm25: Int
+)
 
 data class SilicanTime(val phase: Int, val hour: Int, val minute: Int) {
     companion object {

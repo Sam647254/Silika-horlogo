@@ -8,7 +8,6 @@ import android.view.WindowManager
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.Composable
-import androidx.core.text.buildSpannedString
 import androidx.lifecycle.Observer
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
@@ -21,7 +20,6 @@ import androidx.ui.graphics.Shadow
 import androidx.ui.graphics.imageFromResource
 import androidx.ui.layout.*
 import androidx.ui.material.Surface
-import androidx.ui.text.AnnotatedString
 import androidx.ui.text.SpanStyle
 import androidx.ui.text.TextStyle
 import androidx.ui.text.annotatedString
@@ -94,6 +92,23 @@ fun DefaultPreview() {
 }
 
 @Composable
+fun AwairDataField(value: String, label: String, unit: String = "") {
+    Column(horizontalGravity = Alignment.CenterHorizontally) {
+        Text(annotatedString {
+            pushStyle(SpanStyle(fontSize = 50.sp))
+            append(value)
+            if (unit.isNotEmpty()) {
+                pop()
+                pushStyle(SpanStyle(fontSize = 25.sp))
+                append(' ')
+                append(unit)
+            }
+        }, fontFamily = Saira, style = shadow, modifier = Modifier.padding(horizontal = 15.dp))
+        Text(label, fontSize = 20.sp, fontFamily = Saira, style = shadow, modifier = Modifier.offset(y = (-10).dp))
+    }
+}
+
+@Composable
 fun Clock(context: Context, state: State) {
     val resources = context.resources
     val date = state.date
@@ -119,8 +134,34 @@ fun Clock(context: Context, state: State) {
                             .let(::Color)
                     )
                 )
+                state.awairData?.let { data ->
+                    Row(modifier = Modifier.padding(vertical = 10.dp).fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                        AwairDataField(value = data.score.toString(), label = "Score")
+                        AwairDataField(
+                            value = "%.1f".format(data.temperature),
+                            label = "Temperature",
+                            unit = "°C"
+                        )
+                        AwairDataField(
+                            value = "%.1f".format(data.humidity),
+                            label = "Humidity",
+                            unit = "%"
+                        )
+                        AwairDataField(
+                            value = data.co2.toString(),
+                            label = "Carbon dioxide",
+                            unit = "PPM"
+                        )
+                        AwairDataField(value = data.voc.toString(), label = "V.O.C.", unit = "PPB")
+                        AwairDataField(
+                            value = data.pm25.toString(),
+                            label = "PM2.5",
+                            unit = "μg/m³"
+                        )
+                    }
+                }
                 Row(
-                    modifier = Modifier.fillMaxSize().offset(y = 150.dp),
+                    modifier = Modifier.fillMaxSize().offset(y = 170.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Column(horizontalGravity = Alignment.End) {
