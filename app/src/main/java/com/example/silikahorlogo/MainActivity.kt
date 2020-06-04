@@ -8,6 +8,7 @@ import android.view.WindowManager
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.Composable
+import androidx.core.text.buildSpannedString
 import androidx.lifecycle.Observer
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
@@ -20,7 +21,10 @@ import androidx.ui.graphics.Shadow
 import androidx.ui.graphics.imageFromResource
 import androidx.ui.layout.*
 import androidx.ui.material.Surface
+import androidx.ui.text.AnnotatedString
+import androidx.ui.text.SpanStyle
 import androidx.ui.text.TextStyle
+import androidx.ui.text.annotatedString
 import androidx.ui.text.font.ResourceFont
 import androidx.ui.text.font.fontFamily
 import androidx.ui.tooling.preview.Preview
@@ -116,7 +120,7 @@ fun Clock(context: Context, state: State) {
                     )
                 )
                 Row(
-                    modifier = Modifier.fillMaxSize().offset(y = 140.dp),
+                    modifier = Modifier.fillMaxSize().offset(y = 150.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Column(horizontalGravity = Alignment.End) {
@@ -164,7 +168,7 @@ fun Clock(context: Context, state: State) {
                 ) {
                     Text(
                         text = "${Days.daysBetween(startOfShelterInPlace, today).days}",
-                        fontSize = 100.sp,
+                        fontSize = 80.sp,
                         fontFamily = Saira,
                         style = shadow,
                         modifier = Modifier.offset(y = 25.dp)
@@ -183,8 +187,14 @@ fun Clock(context: Context, state: State) {
                         verticalArrangement = Arrangement.Bottom
                     ) {
                         Text(
-                            text = "${it.total} (+${it.new})",
-                            fontSize = 100.sp,
+                            text = annotatedString {
+                                pushStyle(SpanStyle(fontSize = 80.sp))
+                                append("${it.total} ")
+                                pop()
+                                pushStyle(SpanStyle(fontSize = 50.sp))
+                                append("(+${it.new})")
+                            },
+                            fontSize = 80.sp,
                             fontFamily = Saira,
                             style = shadow,
                             modifier = Modifier.offset(y = 25.dp)
