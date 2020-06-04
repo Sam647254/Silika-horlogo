@@ -157,4 +157,7 @@ data class SilicanDate(val year: Int, val season: Int, val week: Int, val weekda
 
     val textDate get() = "${seasons[season - 1]} ${weeks[week - 1]} ${weekdays[weekday - 1]}"
     val shortDate get() = "$year ${seasons[season - 1][0]}${weeks[week - 1][0]}${weekdays[weekday - 1][0]}"
+    val currentSeason = seasons[season - 1]
+    val currentWeek = weeks[week - 1]
+    val currentWeekday = weekdays[weekday - 1]
 }

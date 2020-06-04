@@ -1,5 +1,6 @@
 package com.example.silikahorlogo
 
+import android.content.Context
 import android.os.Bundle
 import android.view.View
 import android.view.Window
@@ -11,7 +12,6 @@ import androidx.lifecycle.Observer
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
 import androidx.ui.core.setContent
-import androidx.ui.foundation.Box
 import androidx.ui.foundation.Image
 import androidx.ui.foundation.Text
 import androidx.ui.graphics.Color
@@ -59,105 +59,8 @@ class MainActivity : AppCompatActivity() {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         clockViewModel.currentDate.observe(this, Observer { state ->
-            val today = LocalDate.now()
-            val date = state.date
-            val time = state.time
             setContent {
-                SilikaHorloĝoTheme(darkTheme = true) {
-                    Surface {
-                        Stack {
-                            Image(
-                                asset = imageFromResource(resources, R.drawable.background_top),
-                                colorFilter = ColorFilter.tint(
-                                    resources.getColor(weekdayColours[date.weekday - 1], null)
-                                        .let(::Color)
-                                )
-                            )
-                            Image(
-                                asset = imageFromResource(
-                                    resources,
-                                    R.drawable.background_bottom
-                                ),
-                                colorFilter = ColorFilter.tint(
-                                    resources.getColor(phaseColours[time.phase], null)
-                                        .let(::Color)
-                                )
-                            )
-                            Column(
-                                modifier = Modifier.fillMaxSize(),
-                                verticalArrangement = Arrangement.Center,
-                                horizontalGravity = Alignment.CenterHorizontally
-                            ) {
-                                Column(
-                                    horizontalGravity = Alignment.CenterHorizontally
-                                ) {
-                                    Box(Modifier.offset(y = 5.dp)) {
-                                        Text(
-                                            date.year.toString(),
-                                            fontSize = 36.sp,
-                                            style = shadow,
-                                            fontFamily = Saira
-                                        )
-                                    }
-                                    Text(
-                                        date.textDate, fontSize = 54.sp,
-                                        fontFamily = Saira,
-                                        style = shadow
-                                    )
-                                }
-                                Box(Modifier.offset(y = (-50).dp)) {
-                                    Text(
-                                        "${time.hour} ${time.minute.toString()
-                                            .padStart(2, '0')}",
-                                        fontSize = 240.sp,
-                                        fontFamily = SairaSemibold,
-                                        style = TimeShadow
-                                    )
-                                }
-                            }
-                            Column(
-                                modifier = Modifier.padding(start = 10.dp, bottom = 10.dp)
-                                    .fillMaxSize(),
-                                verticalArrangement = Arrangement.Bottom
-                            ) {
-                                Text(
-                                    text = "${Days.daysBetween(startOfShelterInPlace, today).days}",
-                                    fontSize = 100.sp,
-                                    fontFamily = Saira,
-                                    style = shadow,
-                                    modifier = Modifier.offset(y = 25.dp)
-                                )
-                                Text(
-                                    text = "days since shelter-in-place",
-                                    fontSize = 20.sp,
-                                    fontFamily = Saira,
-                                    style = shadow
-                                )
-                            }
-                            state.casesCount?.let {
-                                Column(
-                                    Modifier.padding(end = 10.dp, bottom = 10.dp).fillMaxSize(),
-                                    horizontalGravity = Alignment.End,
-                                    verticalArrangement = Arrangement.Bottom
-                                ) {
-                                    Text(
-                                        text = "${it.total} (+${it.new})",
-                                        fontSize = 100.sp,
-                                        fontFamily = Saira,
-                                        style = shadow,
-                                        modifier = Modifier.offset(y = 25.dp)
-                                    )
-                                    Text(
-                                        text = "cases in Santa Clara as of ${SilicanDate.fromGregorian(it.date.toLocalDate()).shortDate}",
-                                        fontSize = 20.sp,
-                                        fontFamily = Saira,
-                                        style = shadow
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
+                Clock(context = this, state = state)
             }
         })
     }
@@ -183,5 +86,118 @@ fun Greeting(name: String) {
 fun DefaultPreview() {
     SilikaHorloĝoTheme {
         Greeting("Android")
+    }
+}
+
+@Composable
+fun Clock(context: Context, state: State) {
+    val resources = context.resources
+    val date = state.date
+    val time = state.time
+    val today = LocalDate.now()
+    SilikaHorloĝoTheme(darkTheme = true) {
+        Surface {
+            Stack {
+                Image(
+                    asset = imageFromResource(resources, R.drawable.background_top),
+                    colorFilter = ColorFilter.tint(
+                        resources.getColor(weekdayColours[date.weekday - 1], null)
+                            .let(::Color)
+                    )
+                )
+                Image(
+                    asset = imageFromResource(
+                        resources,
+                        R.drawable.background_bottom
+                    ),
+                    colorFilter = ColorFilter.tint(
+                        resources.getColor(phaseColours[time.phase], null)
+                            .let(::Color)
+                    )
+                )
+                Row(
+                    modifier = Modifier.fillMaxSize().offset(y = 140.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Column(horizontalGravity = Alignment.End) {
+                        Text(
+                            date.year.toString(),
+                            fontSize = 36.sp,
+                            style = shadow,
+                            fontFamily = Saira
+                        )
+                        Text(
+                            date.currentSeason,
+                            fontSize = 54.sp,
+                            fontFamily = Saira,
+                            style = shadow,
+                            modifier = Modifier.offset(y = (-15).dp)
+                        )
+                        Text(
+                            date.currentWeek,
+                            fontSize = 54.sp,
+                            fontFamily = Saira,
+                            style = shadow,
+                            modifier = Modifier.offset(y = (-30).dp)
+                        )
+                        Text(
+                            date.currentWeekday,
+                            fontSize = 54.sp,
+                            fontFamily = Saira,
+                            style = shadow,
+                            modifier = Modifier.offset(y = (-45).dp)
+                        )
+                    }
+                    Text(
+                        "${time.hour} ${time.minute.toString()
+                            .padStart(2, '0')}",
+                        fontSize = 240.sp,
+                        fontFamily = SairaSemibold,
+                        style = TimeShadow,
+                        modifier = Modifier.offset(y = (-40).dp)
+                    )
+                }
+                Column(
+                    modifier = Modifier.padding(start = 10.dp, bottom = 10.dp)
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.Bottom
+                ) {
+                    Text(
+                        text = "${Days.daysBetween(startOfShelterInPlace, today).days}",
+                        fontSize = 100.sp,
+                        fontFamily = Saira,
+                        style = shadow,
+                        modifier = Modifier.offset(y = 25.dp)
+                    )
+                    Text(
+                        text = "days since shelter-in-place",
+                        fontSize = 20.sp,
+                        fontFamily = Saira,
+                        style = shadow
+                    )
+                }
+                state.casesCount?.let {
+                    Column(
+                        Modifier.padding(end = 10.dp, bottom = 10.dp).fillMaxSize(),
+                        horizontalGravity = Alignment.End,
+                        verticalArrangement = Arrangement.Bottom
+                    ) {
+                        Text(
+                            text = "${it.total} (+${it.new})",
+                            fontSize = 100.sp,
+                            fontFamily = Saira,
+                            style = shadow,
+                            modifier = Modifier.offset(y = 25.dp)
+                        )
+                        Text(
+                            text = "cases in Santa Clara as of ${SilicanDate.fromGregorian(it.date.toLocalDate()).shortDate}",
+                            fontSize = 20.sp,
+                            fontFamily = Saira,
+                            style = shadow
+                        )
+                    }
+                }
+            }
+        }
     }
 }
