@@ -12,8 +12,7 @@ import androidx.lifecycle.Observer
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
 import androidx.ui.core.setContent
-import androidx.ui.foundation.Image
-import androidx.ui.foundation.Text
+import androidx.ui.foundation.*
 import androidx.ui.graphics.Color
 import androidx.ui.graphics.ColorFilter
 import androidx.ui.graphics.Shadow
@@ -62,7 +61,7 @@ class MainActivity : AppCompatActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         clockViewModel.currentDate.observe(this, Observer { state ->
             setContent {
-                Clock(context = this, state = state)
+                Clock(this, state, clockViewModel::refreshCasesCount)
             }
         })
     }
@@ -122,7 +121,7 @@ fun AwairDataField(value: String, label: String, unit: String = "") {
 }
 
 @Composable
-fun Clock(context: Context, state: State) {
+fun Clock(context: Context, state: State, reŝarĝiKazojn: () -> Unit) {
     val resources = context.resources
     val date = state.date
     val time = state.time
@@ -239,7 +238,9 @@ fun Clock(context: Context, state: State) {
                 }
                 state.casesCount?.let {
                     Column(
-                        Modifier.padding(end = 10.dp, bottom = 10.dp).fillMaxSize(),
+                        Modifier.padding(end = 10.dp, bottom = 10.dp).fillMaxSize().clickable(
+                            onClick = reŝarĝiKazojn
+                        ),
                         horizontalGravity = Alignment.End,
                         verticalArrangement = Arrangement.Bottom
                     ) {

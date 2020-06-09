@@ -77,13 +77,7 @@ class SilicanClockViewModel : ViewModel() {
         clockUpdater.run()
         val casesCountUpdater = object : Runnable {
             override fun run() {
-                viewModelScope.launch {
-                    withContext(Dispatchers.IO) {
-                        fetchCasesCount()?.let {
-                            state = state.copy(casesCount = it)
-                        }
-                    }
-                }
+                refreshCasesCount()
                 val now = LocalDateTime.now()
                 val nextUpdate = LocalDate.now().plusDays(1).toLocalDateTime(LocalTime.MIDNIGHT)
                 handler.postDelayed(
@@ -93,6 +87,17 @@ class SilicanClockViewModel : ViewModel() {
             }
         }
         casesCountUpdater.run()
+    }
+
+    fun refreshCasesCount() {
+        Log.d(this::class.simpleName, "Refreshing cases count")
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                fetchCasesCount()?.let {
+                    state = state.copy(casesCount = it)
+                }
+            }
+        }
     }
 
     private fun fetchCasesCount(): CasesCount? {
