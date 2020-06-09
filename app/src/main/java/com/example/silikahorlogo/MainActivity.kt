@@ -257,7 +257,7 @@ fun Clock(context: Context, state: State) {
                             modifier = Modifier.offset(y = 25.dp)
                         )
                         Text(
-                            text = "cases in Santa Clara as of ${SilicanDate.fromGregorian(it.date.toLocalDate()).shortDate}",
+                            text = "cases in Santa Clara",
                             fontSize = 20.sp,
                             fontFamily = Saira,
                             style = shadow

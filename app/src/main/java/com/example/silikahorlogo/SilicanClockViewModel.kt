@@ -13,6 +13,7 @@ import org.joda.time.*
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
+import javax.net.ssl.HttpsURLConnection
 
 internal val syncPoint = LocalDate(2018, 1, 1)
 internal const val syncDayNumber = 12017 * 364 + 7 * ((12017 / 5) - (12017 / 40) + (12017 / 400))
@@ -21,6 +22,15 @@ internal const val daysIn40Years = 40 * 364 + 7 * (40 / 5 - 1)
 internal const val daysIn5Years = 5 * 364 + 7
 
 class SilicanClockViewModel : ViewModel() {
+    private companion object {
+        const val DATA_URL =
+            "https://wabi-us-gov-virginia-api.analysis.usgovcloudapi.net/public/reports/querydata?synchronous=true"
+        const val CASES_PAYLOAD =
+            "{\"version\":\"1.0.0\",\"queries\":[{\"Query\":{\"Commands\":[{\"SemanticQueryDataShapeCommand\":{\"Query\":{\"Version\":2,\"From\":[{\"Name\":\"c\",\"Entity\":\"counts\",\"Type\":0}],\"Select\":[{\"Aggregation\":{\"Expression\":{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"Total\"}},\"Function\":0},\"Name\":\"Sum(counts.Total)\"}],\"Where\":[{\"Condition\":{\"In\":{\"Expressions\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"Category\"}}],\"Values\":[[{\"Literal\":{\"Value\":\"'Cases'\"}}]]}}}]},\"Binding\":{\"Primary\":{\"Groupings\":[{\"Projections\":[0]}]},\"DataReduction\":{\"DataVolume\":3,\"Primary\":{\"Top\":{}}},\"Version\":1}}}]},\"CacheKey\":\"{\\\"Commands\\\":[{\\\"SemanticQueryDataShapeCommand\\\":{\\\"Query\\\":{\\\"Version\\\":2,\\\"From\\\":[{\\\"Name\\\":\\\"c\\\",\\\"Entity\\\":\\\"counts\\\",\\\"Type\\\":0}],\\\"Select\\\":[{\\\"Aggregation\\\":{\\\"Expression\\\":{\\\"Column\\\":{\\\"Expression\\\":{\\\"SourceRef\\\":{\\\"Source\\\":\\\"c\\\"}},\\\"Property\\\":\\\"Total\\\"}},\\\"Function\\\":0},\\\"Name\\\":\\\"Sum(counts.Total)\\\"}],\\\"Where\\\":[{\\\"Condition\\\":{\\\"In\\\":{\\\"Expressions\\\":[{\\\"Column\\\":{\\\"Expression\\\":{\\\"SourceRef\\\":{\\\"Source\\\":\\\"c\\\"}},\\\"Property\\\":\\\"Category\\\"}}],\\\"Values\\\":[[{\\\"Literal\\\":{\\\"Value\\\":\\\"'Cases'\\\"}}]]}}}]},\\\"Binding\\\":{\\\"Primary\\\":{\\\"Groupings\\\":[{\\\"Projections\\\":[0]}]},\\\"DataReduction\\\":{\\\"DataVolume\\\":3,\\\"Primary\\\":{\\\"Top\\\":{}}},\\\"Version\\\":1}}}]}\",\"QueryId\":\"\",\"ApplicationContext\":{\"DatasetId\":\"b9bd8aff-3939-4b9b-bb7f-b562bdc492ad\",\"Sources\":[{\"ReportId\":\"8c0bb640-6b65-4ea6-9146-39a7cbad0314\"}]}}],\"cancelQueries\":[],\"modelId\":344061}"
+        const val NEW_CASES_PAYLOAD =
+            "{\"version\":\"1.0.0\",\"queries\":[{\"Query\":{\"Commands\":[{\"SemanticQueryDataShapeCommand\":{\"Query\":{\"Version\":2,\"From\":[{\"Name\":\"c\",\"Entity\":\"counts\",\"Type\":0}],\"Select\":[{\"Aggregation\":{\"Expression\":{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"New\"}},\"Function\":0},\"Name\":\"Sum(counts.New)\"}],\"Where\":[{\"Condition\":{\"In\":{\"Expressions\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"Category\"}}],\"Values\":[[{\"Literal\":{\"Value\":\"'Cases'\"}}]]}}}]},\"Binding\":{\"Primary\":{\"Groupings\":[{\"Projections\":[0]}]},\"DataReduction\":{\"DataVolume\":3,\"Primary\":{\"Top\":{}}},\"Version\":1}}}]},\"CacheKey\":\"{\\\"Commands\\\":[{\\\"SemanticQueryDataShapeCommand\\\":{\\\"Query\\\":{\\\"Version\\\":2,\\\"From\\\":[{\\\"Name\\\":\\\"c\\\",\\\"Entity\\\":\\\"counts\\\",\\\"Type\\\":0}],\\\"Select\\\":[{\\\"Aggregation\\\":{\\\"Expression\\\":{\\\"Column\\\":{\\\"Expression\\\":{\\\"SourceRef\\\":{\\\"Source\\\":\\\"c\\\"}},\\\"Property\\\":\\\"New\\\"}},\\\"Function\\\":0},\\\"Name\\\":\\\"Sum(counts.New)\\\"}],\\\"Where\\\":[{\\\"Condition\\\":{\\\"In\\\":{\\\"Expressions\\\":[{\\\"Column\\\":{\\\"Expression\\\":{\\\"SourceRef\\\":{\\\"Source\\\":\\\"c\\\"}},\\\"Property\\\":\\\"Category\\\"}}],\\\"Values\\\":[[{\\\"Literal\\\":{\\\"Value\\\":\\\"'Cases'\\\"}}]]}}}]},\\\"Binding\\\":{\\\"Primary\\\":{\\\"Groupings\\\":[{\\\"Projections\\\":[0]}]},\\\"DataReduction\\\":{\\\"DataVolume\\\":3,\\\"Primary\\\":{\\\"Top\\\":{}}},\\\"Version\\\":1}}}]}\",\"QueryId\":\"\",\"ApplicationContext\":{\"DatasetId\":\"b9bd8aff-3939-4b9b-bb7f-b562bdc492ad\",\"Sources\":[{\"ReportId\":\"8c0bb640-6b65-4ea6-9146-39a7cbad0314\"}]}}],\"cancelQueries\":[],\"modelId\":344061}"
+    }
+
     val currentDate = MutableLiveData<State>()
     var state: State = State(
         SilicanDate.fromGregorian(LocalDate.now()),
@@ -85,6 +95,12 @@ class SilicanClockViewModel : ViewModel() {
         casesCountUpdater.run()
     }
 
+    private fun fetchCasesCount(): CasesCount? {
+        val total = fetchData(CASES_PAYLOAD) ?: return null
+        val new = fetchData(NEW_CASES_PAYLOAD) ?: return null
+        return CasesCount(total, new)
+    }
+
     private fun fetchAwairData(): AwairData? {
         val url = URL("http://awair-elem-14041c/air-data/latest")
         return (url.openConnection() as? HttpURLConnection)?.run {
@@ -104,25 +120,28 @@ class SilicanClockViewModel : ViewModel() {
         }
     }
 
-    private fun fetchCasesCount(): CasesCount? {
-        val url = URL(
-            "https://data.ca.gov/api/3/action/datastore_search_sql?sql=select " +
-                    "totalcountconfirmed, newcountconfirmed, date from " +
-                    "\"926fd08f-cc91-4828-af38-bd45de97f8c3\" where county = 'Santa Clara' order by " +
-                    "date desc limit 1"
-        )
-        return (url.openConnection() as? HttpURLConnection)?.run {
-            requestMethod = "GET"
-            inputStream.bufferedReader().readText().let(::JSONObject).getJSONObject("result")
-                .getJSONArray("records")
+    private fun fetchData(payload: String): Int? {
+        val url = URL(DATA_URL)
+        return (url.openConnection() as? HttpsURLConnection)?.run {
+            requestMethod = "POST"
+            doOutput = true
+            with(outputStream.bufferedWriter()) {
+                write(payload)
+                flush()
+            }
+            inputStream.bufferedReader().readText().let(::JSONObject)
+                .getJSONArray("results")
                 .getJSONObject(0)
-                .let { result ->
-                    CasesCount(
-                        result.getString("totalcountconfirmed").let(String::toFloat).toInt(),
-                        result.getString("newcountconfirmed").let(String::toInt),
-                        result.getString("date").let(LocalDateTime::parse)
-                    )
-                }
+                .getJSONObject("result")
+                .getJSONObject("data")
+                .getJSONObject("dsr")
+                .getJSONArray("DS")
+                .getJSONObject(0)
+                .getJSONArray("PH")
+                .getJSONObject(0)
+                .getJSONArray("DM0")
+                .getJSONObject(0)
+                .getInt("M0")
         }
     }
 }
@@ -154,7 +173,7 @@ data class SilicanTime(val phase: Int, val hour: Int, val minute: Int) {
     }
 }
 
-data class CasesCount(val total: Int, val new: Int, val date: LocalDateTime)
+data class CasesCount(val total: Int, val new: Int)
 
 data class SilicanDate(val year: Int, val season: Int, val week: Int, val weekday: Int) {
     companion object {
