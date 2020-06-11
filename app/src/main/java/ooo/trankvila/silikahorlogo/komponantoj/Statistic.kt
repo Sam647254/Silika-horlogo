@@ -11,11 +11,12 @@ import androidx.ui.text.SpanStyle
 import androidx.ui.text.annotatedString
 import androidx.ui.unit.dp
 import androidx.ui.unit.sp
+import ooo.trankvila.silikahorlogo.Statistic
 import ooo.trankvila.silikahorlogo.ui.Saira
 import ooo.trankvila.silikahorlogo.ui.shadow
 
 @Composable
-fun Statistic(number: String, subnumber: String? = null, caption: String, onClick: () -> Unit) {
+fun StatisticDisplay(statistic: Statistic, onClick: () -> Unit) {
     Column(
         Modifier.padding(end = 10.dp, bottom = 10.dp),
         horizontalGravity = Alignment.End,
@@ -25,8 +26,8 @@ fun Statistic(number: String, subnumber: String? = null, caption: String, onClic
             Text(
                 text = annotatedString {
                     pushStyle(SpanStyle(fontSize = 80.sp))
-                    append(number)
-                    subnumber?.let {
+                    append(statistic.number)
+                    statistic.subnumber?.let {
                         pop()
                         pushStyle(SpanStyle(fontSize = 50.sp))
                         append(it)
@@ -38,7 +39,7 @@ fun Statistic(number: String, subnumber: String? = null, caption: String, onClic
                 modifier = Modifier.offset(y = 25.dp)
             )
             Text(
-                text = caption,
+                text = statistic.caption,
                 fontSize = 20.sp,
                 fontFamily = Saira,
                 style = shadow

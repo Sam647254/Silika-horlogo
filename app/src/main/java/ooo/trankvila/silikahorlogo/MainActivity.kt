@@ -11,15 +11,23 @@ import androidx.compose.Composable
 import androidx.compose.setValue
 import androidx.compose.state
 import androidx.lifecycle.Observer
+import androidx.ui.core.Alignment
+import androidx.ui.core.Modifier
 import androidx.ui.core.setContent
+import androidx.ui.foundation.Box
 import androidx.ui.foundation.Image
 import androidx.ui.graphics.Color
 import androidx.ui.graphics.ColorFilter
 import androidx.ui.graphics.imageFromResource
+import androidx.ui.layout.Row
 import androidx.ui.layout.Stack
+import androidx.ui.layout.fillMaxSize
+import androidx.ui.layout.padding
 import androidx.ui.material.Surface
+import androidx.ui.unit.dp
 import ooo.trankvila.silikahorlogo.komponantoj.AwairDataStrip
 import ooo.trankvila.silikahorlogo.komponantoj.Clock
+import ooo.trankvila.silikahorlogo.komponantoj.StatisticDisplay
 import ooo.trankvila.silikahorlogo.ui.SilikaHorloĝoTheme
 import ooo.trankvila.silikahorlogo.ui.phaseColours
 import ooo.trankvila.silikahorlogo.ui.weekdayColours
@@ -28,6 +36,7 @@ import org.joda.time.LocalDate
 class MainActivity : AppCompatActivity() {
     private val clockViewModel: SilicanClockViewModel by viewModels()
     private val awairViewModel: AwairViewModel by viewModels()
+    private val statisticsViewModel: StatisticsViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,6 +45,7 @@ class MainActivity : AppCompatActivity() {
         setContent {
             val clockState = state { SilicanDateTime.now }
             val awairDataState = state<AwairData?> { null }
+            val statisticsState = state<Statistic?> { null }
 
             clockViewModel.currentDate.observe(this, Observer { newState ->
                 clockState.value = newState
@@ -45,12 +55,26 @@ class MainActivity : AppCompatActivity() {
                 awairDataState.value = newData
             })
 
+            statisticsViewModel.statistic.observe(this, Observer {
+                statisticsState.value = it
+            })
+
             SilikaHorloĝoTheme(darkTheme = true) {
                 Surface {
                     Stack {
                         Background(applicationContext, clockState.value.date, clockState.value.time)
-                        awairDataState.value?.let(::AwairDataStrip)
+                        awairDataState.value?.let {
+                            AwairDataStrip(it)
+                        }
                         Clock(clockState.value)
+                        Box(
+                            modifier = Modifier.fillMaxSize().gravity(Alignment.BottomEnd)
+                                .padding(10.dp)
+                        ) {
+                            statisticsState.value?.let {
+                                StatisticDisplay(statistic = it, onClick = {})
+                            }
+                        }
                     }
                 }
             }

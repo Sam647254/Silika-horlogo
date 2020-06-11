@@ -1,26 +1,17 @@
 package ooo.trankvila.silikahorlogo.komponantoj
 
-import android.content.Context
 import androidx.compose.Composable
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
-import androidx.ui.foundation.Image
 import androidx.ui.foundation.Text
-import androidx.ui.foundation.clickable
-import androidx.ui.graphics.Color
-import androidx.ui.graphics.ColorFilter
-import androidx.ui.graphics.imageFromResource
 import androidx.ui.layout.*
-import androidx.ui.material.Surface
-import androidx.ui.text.SpanStyle
-import androidx.ui.text.annotatedString
 import androidx.ui.unit.dp
 import androidx.ui.unit.sp
-import ooo.trankvila.silikahorlogo.R
 import ooo.trankvila.silikahorlogo.SilicanDateTime
-import ooo.trankvila.silikahorlogo.State
-import ooo.trankvila.silikahorlogo.ui.*
-import org.joda.time.Days
+import ooo.trankvila.silikahorlogo.ui.Saira
+import ooo.trankvila.silikahorlogo.ui.SairaSemibold
+import ooo.trankvila.silikahorlogo.ui.TimeShadow
+import ooo.trankvila.silikahorlogo.ui.shadow
 import org.joda.time.LocalDate
 
 private val startOfShelterInPlace = LocalDate(2020, 3, 3)
