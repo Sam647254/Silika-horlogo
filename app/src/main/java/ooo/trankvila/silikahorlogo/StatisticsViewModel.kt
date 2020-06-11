@@ -2,17 +2,20 @@ package ooo.trankvila.silikahorlogo
 
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URL
 import javax.net.ssl.HttpsURLConnection
 
-class StatisticsViewModel: ViewModel() {
+class StatisticsViewModel : ViewModel() {
     private companion object {
         const val DATA_URL =
             "https://wabi-us-gov-virginia-api.analysis.usgovcloudapi.net/public/reports/querydata?synchronous=true"
@@ -28,32 +31,50 @@ class StatisticsViewModel: ViewModel() {
         val total = fetchData(CASES_PAYLOAD) ?: return@listOf null
         val new = fetchData(NEW_CASES_PAYLOAD) ?: return@listOf null
         Statistic(total.toString(), "($new new)", "cases in Santa Clara")
+    }, {
+        val data =
+            fetch("https://data.sccgov.org/resource/59wk-iusg.json?city=Mountain View").let(::JSONArray)
+        Statistic(
+            data.getJSONObject(0).getString("cases"), "(${
+            data.getJSONObject(0).getString("rate")
+            }/100K)", "cases in Mountain View"
+        )
     })
     private var statisticIndex = 0
 
     init {
         val handler = Handler(Looper.getMainLooper())
 
+        Log.d(this::class.simpleName, "statisticIndex: $statisticIndex")
+
         val statisticUpdater = object : Runnable {
             override fun run() {
                 if (cache.containsKey(statisticIndex)) {
                     statistic.postValue(cache[statisticIndex])
+                    statisticIndex = (statisticIndex + 1) % statistics.size
                 } else {
                     viewModelScope.launch {
                         withContext(Dispatchers.IO) {
                             statistics[statisticIndex]()?.let {
                                 cache[statisticIndex] = it
                                 statistic.postValue(it)
+                                statisticIndex = (statisticIndex + 1) % statistics.size
                             }
                         }
                     }
                 }
-                statisticIndex = (statisticIndex + 1) % statistics.size
                 handler.postDelayed(this, 20000)
             }
         }
         statisticUpdater.run()
     }
+
+    private fun fetch(url: String) =
+        (URL(url).openConnection() as? HttpsURLConnection)?.run {
+            requestMethod = "GET"
+            addRequestProperty("X-App-Token", SocrataAppToken)
+            inputStream.bufferedReader().readText()
+        }
 
     private fun fetchData(payload: String): Int? {
         val url = URL(DATA_URL)
