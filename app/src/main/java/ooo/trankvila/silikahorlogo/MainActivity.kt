@@ -2,17 +2,22 @@ package ooo.trankvila.silikahorlogo
 
 import android.content.Context
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
 import androidx.activity.viewModels
+import androidx.animation.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.Composable
 import androidx.compose.setValue
 import androidx.compose.state
 import androidx.lifecycle.Observer
+import androidx.ui.animation.Transition
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
+import androidx.ui.core.drawOpacity
 import androidx.ui.core.setContent
 import androidx.ui.foundation.Box
 import androidx.ui.foundation.Image
@@ -46,10 +51,14 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        val handler = Handler(Looper.getMainLooper())
+
         setContent {
             val clockState = state { SilicanDateTime.now }
             val awairDataState = state<AwairData?> { null }
             val statisticsState = state<Statistic?> { null }
+            val statisticsTransitionState = state { "visible" }
 
             clockViewModel.currentDate.observe(this, Observer { newState ->
                 clockState.value = newState
@@ -60,8 +69,36 @@ class MainActivity : AppCompatActivity() {
             })
 
             statisticsViewModel.statistic.observe(this, Observer {
-                statisticsState.value = it
+                statisticsTransitionState.value = "invisible"
+                handler.postDelayed({
+                    statisticsState.value = it
+                    statisticsTransitionState.value = "visible"
+                }, 1000)
             })
+
+            val opacity = FloatPropKey("Opacity")
+            val fadeTransition = transitionDefinition {
+                state("visible") {
+                    this[opacity] = 1.0F
+                }
+                state("invisible") {
+                    this[opacity] = 0F
+                }
+
+                transition("visible" to "invisible") {
+                    opacity using tween {
+                        duration = 500
+                        easing = FastOutLinearInEasing
+                    }
+                }
+
+                transition("invisible" to "visible") {
+                    opacity using tween {
+                        duration = 500
+                        easing = FastOutSlowInEasing
+                    }
+                }
+            }
 
             SilikaHorloĝoTheme(darkTheme = true) {
                 Surface {
@@ -73,21 +110,27 @@ class MainActivity : AppCompatActivity() {
                         Clock(clockState.value)
                         Box(
                             modifier = Modifier.fillMaxSize().padding(10.dp),
-                            gravity = Alignment.BottomEnd
-                        ) {
-                            statisticsState.value?.let {
-                                StatisticDisplay(
-                                    statistic = it,
-                                    onClick = {},
-                                    alignment = Alignment.End
-                                )
-                            }
-                        }
-                        Box(
-                            modifier = Modifier.fillMaxSize().padding(10.dp),
                             gravity = Alignment.BottomStart
                         ) {
                             ShelterInPlaceCounter()
+                        }
+                        Transition(
+                            definition = fadeTransition,
+                            toState = statisticsTransitionState.value
+                        ) { state ->
+                            Box(
+                                modifier = Modifier.fillMaxSize().padding(10.dp)
+                                    .drawOpacity(state[opacity]),
+                                gravity = Alignment.BottomEnd
+                            ) {
+                                statisticsState.value?.let {
+                                    StatisticDisplay(
+                                        statistic = it,
+                                        onClick = {},
+                                        alignment = Alignment.End
+                                    )
+                                }
+                            }
                         }
                     }
                 }
