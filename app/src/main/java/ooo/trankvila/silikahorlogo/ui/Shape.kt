@@ -1,4 +1,4 @@
-package com.example.silikahorlogo.ui
+package ooo.trankvila.silikahorlogo.ui
 
 import androidx.ui.foundation.shape.corner.RoundedCornerShape
 import androidx.ui.material.Shapes

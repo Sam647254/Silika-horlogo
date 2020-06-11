@@ -1,4 +1,4 @@
-package com.example.silikahorlogo.ui
+package ooo.trankvila.silikahorlogo.ui
 
 import androidx.compose.Composable
 import androidx.ui.foundation.isSystemInDarkTheme

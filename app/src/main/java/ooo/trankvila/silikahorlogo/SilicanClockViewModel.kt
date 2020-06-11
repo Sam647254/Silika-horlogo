@@ -1,4 +1,4 @@
-package com.example.silikahorlogo
+package ooo.trankvila.silikahorlogo
 
 import android.os.Handler
 import android.os.Looper
