@@ -31,7 +31,11 @@ import ooo.trankvila.silikahorlogo.komponantoj.StatisticDisplay
 import ooo.trankvila.silikahorlogo.ui.SilikaHorloĝoTheme
 import ooo.trankvila.silikahorlogo.ui.phaseColours
 import ooo.trankvila.silikahorlogo.ui.weekdayColours
+import org.joda.time.Days
 import org.joda.time.LocalDate
+import org.joda.time.Period
+
+private val startOfShelterInPlace = LocalDate(2020, 3, 3)
 
 class MainActivity : AppCompatActivity() {
     private val clockViewModel: SilicanClockViewModel by viewModels()
@@ -68,12 +72,22 @@ class MainActivity : AppCompatActivity() {
                         }
                         Clock(clockState.value)
                         Box(
-                            modifier = Modifier.fillMaxSize().gravity(Alignment.BottomEnd)
-                                .padding(10.dp)
+                            modifier = Modifier.fillMaxSize().padding(10.dp),
+                            gravity = Alignment.BottomEnd
                         ) {
                             statisticsState.value?.let {
-                                StatisticDisplay(statistic = it, onClick = {})
+                                StatisticDisplay(
+                                    statistic = it,
+                                    onClick = {},
+                                    alignment = Alignment.End
+                                )
                             }
+                        }
+                        Box(
+                            modifier = Modifier.fillMaxSize().padding(10.dp),
+                            gravity = Alignment.BottomStart
+                        ) {
+                            ShelterInPlaceCounter()
                         }
                     }
                 }
@@ -90,6 +104,18 @@ class MainActivity : AppCompatActivity() {
                 or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                 or View.SYSTEM_UI_FLAG_FULLSCREEN)
     }
+}
+
+@Composable
+fun ShelterInPlaceCounter() {
+    val duration = Days.daysBetween(startOfShelterInPlace, LocalDate.now()).days
+    StatisticDisplay(
+        statistic = Statistic(
+            duration.toString(),
+            null,
+            "days since shelter-in-place started"
+        ), onClick = {}, alignment = Alignment.Start
+    )
 }
 
 @Composable

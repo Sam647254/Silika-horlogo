@@ -14,8 +14,6 @@ import ooo.trankvila.silikahorlogo.ui.TimeShadow
 import ooo.trankvila.silikahorlogo.ui.shadow
 import org.joda.time.LocalDate
 
-private val startOfShelterInPlace = LocalDate(2020, 3, 3)
-
 @Composable
 fun Clock(dateTime: SilicanDateTime) {
     val date = dateTime.date
