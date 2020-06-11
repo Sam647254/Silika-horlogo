@@ -10,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.joda.time.LocalDate
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URL
@@ -38,6 +39,17 @@ class StatisticsViewModel : ViewModel() {
             data.getJSONObject(0).getString("cases"), "(${
             data.getJSONObject(0).getString("rate")
             }/100K)", "cases in Mountain View"
+        )
+    }, {
+        val data =
+            fetch("https://data.covidactnow.org/latest/us/states/CA.OBSERVED_INTERVENTION.timeseries.json").let(
+                ::JSONObject
+            )
+        Statistic(
+            "%.3f".format(data.getJSONObject("projections").getDouble("Rt")),
+            null,
+            "California R-effective (as of ${LocalDate.parse(data.getString("lastUpdatedDate"))
+                .let { SilicanDate.fromGregorian(it) }.shortDate})"
         )
     })
     private var statisticIndex = 0
