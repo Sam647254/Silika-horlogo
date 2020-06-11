@@ -31,40 +31,15 @@ class SilicanClockViewModel : ViewModel() {
             "{\"version\":\"1.0.0\",\"queries\":[{\"Query\":{\"Commands\":[{\"SemanticQueryDataShapeCommand\":{\"Query\":{\"Version\":2,\"From\":[{\"Name\":\"c\",\"Entity\":\"counts\",\"Type\":0}],\"Select\":[{\"Aggregation\":{\"Expression\":{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"New\"}},\"Function\":0},\"Name\":\"Sum(counts.New)\"}],\"Where\":[{\"Condition\":{\"In\":{\"Expressions\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"Category\"}}],\"Values\":[[{\"Literal\":{\"Value\":\"'Cases'\"}}]]}}}]},\"Binding\":{\"Primary\":{\"Groupings\":[{\"Projections\":[0]}]},\"DataReduction\":{\"DataVolume\":3,\"Primary\":{\"Top\":{}}},\"Version\":1}}}]},\"CacheKey\":\"{\\\"Commands\\\":[{\\\"SemanticQueryDataShapeCommand\\\":{\\\"Query\\\":{\\\"Version\\\":2,\\\"From\\\":[{\\\"Name\\\":\\\"c\\\",\\\"Entity\\\":\\\"counts\\\",\\\"Type\\\":0}],\\\"Select\\\":[{\\\"Aggregation\\\":{\\\"Expression\\\":{\\\"Column\\\":{\\\"Expression\\\":{\\\"SourceRef\\\":{\\\"Source\\\":\\\"c\\\"}},\\\"Property\\\":\\\"New\\\"}},\\\"Function\\\":0},\\\"Name\\\":\\\"Sum(counts.New)\\\"}],\\\"Where\\\":[{\\\"Condition\\\":{\\\"In\\\":{\\\"Expressions\\\":[{\\\"Column\\\":{\\\"Expression\\\":{\\\"SourceRef\\\":{\\\"Source\\\":\\\"c\\\"}},\\\"Property\\\":\\\"Category\\\"}}],\\\"Values\\\":[[{\\\"Literal\\\":{\\\"Value\\\":\\\"'Cases'\\\"}}]]}}}]},\\\"Binding\\\":{\\\"Primary\\\":{\\\"Groupings\\\":[{\\\"Projections\\\":[0]}]},\\\"DataReduction\\\":{\\\"DataVolume\\\":3,\\\"Primary\\\":{\\\"Top\\\":{}}},\\\"Version\\\":1}}}]}\",\"QueryId\":\"\",\"ApplicationContext\":{\"DatasetId\":\"b9bd8aff-3939-4b9b-bb7f-b562bdc492ad\",\"Sources\":[{\"ReportId\":\"8c0bb640-6b65-4ea6-9146-39a7cbad0314\"}]}}],\"cancelQueries\":[],\"modelId\":344061}"
     }
 
-    val currentDate = MutableLiveData<State>()
-    var state: State = State(
-        SilicanDate.fromGregorian(LocalDate.now()),
-        SilicanTime.fromStandard(LocalTime.now()),
-        null,
-        null
-    )
-        set(value) {
-            field = value
-            currentDate.postValue(value)
-        }
+    val currentDate = MutableLiveData<SilicanDateTime>()
 
     init {
         val handler = Handler(Looper.getMainLooper())
-        val awairUpdater = Runnable {
-            viewModelScope.launch {
-                withContext(Dispatchers.IO) {
-                    val awair = fetchAwairData()
-                    state = state.copy(
-                        awairData = awair
-                    )
-                }
-            }
-        }
+
         val clockUpdater = object : Runnable {
             override fun run() {
-                awairUpdater.run()
                 val now = LocalTime.now()
-                state = state.copy(
-                    date = SilicanDate.fromGregorian(LocalDate.now()),
-                    time = SilicanTime.fromStandard(
-                        LocalTime.now()
-                    )
-                )
+                currentDate.postValue(SilicanDateTime.now)
                 val nextMinute =
                     now.withFieldAdded(DurationFieldType.minutes(), 1).withSecondOfMinute(0)
                 handler.postDelayed(
@@ -73,7 +48,6 @@ class SilicanClockViewModel : ViewModel() {
                 )
             }
         }
-        awairUpdater.run()
         clockUpdater.run()
         val casesCountUpdater = object : Runnable {
             override fun run() {
@@ -106,25 +80,6 @@ class SilicanClockViewModel : ViewModel() {
         return CasesCount(total, new)
     }
 
-    private fun fetchAwairData(): AwairData? {
-        val url = URL("http://awair-elem-14041c/air-data/latest")
-        return (url.openConnection() as? HttpURLConnection)?.run {
-            requestMethod = "GET"
-            inputStream.bufferedReader().use {
-                it.readText().let(::JSONObject).let { response ->
-                    AwairData(
-                        response.getInt("score"),
-                        response.getDouble("temp"),
-                        response.getDouble("humid"),
-                        response.getInt("co2"),
-                        response.getInt("voc"),
-                        response.getInt("pm25")
-                    )
-                }
-            }
-        }
-    }
-
     private fun fetchData(payload: String): Int? {
         val url = URL(DATA_URL)
         return (url.openConnection() as? HttpsURLConnection)?.run {
@@ -151,12 +106,11 @@ class SilicanClockViewModel : ViewModel() {
     }
 }
 
-data class State(
-    val date: SilicanDate,
-    val time: SilicanTime,
-    val casesCount: CasesCount?,
-    val awairData: AwairData?
-)
+data class SilicanDateTime(val date: SilicanDate, val time: SilicanTime) {
+    companion object {
+        val now get() = SilicanDateTime(SilicanDate.now, SilicanTime.now)
+    }
+}
 
 data class AwairData(
     val score: Int,
@@ -170,11 +124,12 @@ data class AwairData(
 data class SilicanTime(val phase: Int, val hour: Int, val minute: Int) {
     companion object {
         fun fromStandard(time: LocalTime): SilicanTime {
-            val now = LocalTime.now()
-            val hour = now.hourOfDay % 8
-            val phase = now.hourOfDay / 8
-            return SilicanTime(phase, hour, now.minuteOfHour)
+            val hour = time.hourOfDay % 8
+            val phase = time.hourOfDay / 8
+            return SilicanTime(phase, hour, time.minuteOfHour)
         }
+
+        val now get() = fromStandard(LocalTime.now())
     }
 }
 
@@ -235,6 +190,8 @@ data class SilicanDate(val year: Int, val season: Int, val week: Int, val weekda
             "Relikanika",
             "Temiranika"
         )
+
+        val now get() = fromGregorian(LocalDate.now())
     }
 
     val textDate get() = "${seasons[season - 1]} ${weeks[week - 1]} ${weekdays[weekday - 1]}"
