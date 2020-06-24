@@ -90,8 +90,6 @@ class StatisticsViewModel : ViewModel() {
     init {
         val handler = Handler(Looper.getMainLooper())
 
-        Log.d(this::class.simpleName, "statisticIndex: $statisticIndex")
-
         val statisticUpdater = object : Runnable {
             override fun run() {
                 if (cache.containsKey(statisticIndex)) {

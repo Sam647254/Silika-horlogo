@@ -1,63 +1,54 @@
 package ooo.trankvila.silikahorlogo.komponantoj
 
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import androidx.animation.IntPropKey
 import androidx.animation.LinearEasing
+import androidx.animation.TweenBuilder
 import androidx.animation.transitionDefinition
 import androidx.compose.Composable
+import androidx.compose.mutableStateOf
+import androidx.compose.remember
+import androidx.compose.state
+import androidx.ui.animation.Crossfade
 import androidx.ui.animation.Transition
 import androidx.ui.animation.animate
 import androidx.ui.core.Modifier
+import androidx.ui.core.onChildPositioned
+import androidx.ui.core.onPositioned
 import androidx.ui.foundation.Text
 import androidx.ui.layout.*
-import androidx.ui.unit.Dp
-import androidx.ui.unit.dp
-import androidx.ui.unit.sp
+import androidx.ui.text.SpanStyle
+import androidx.ui.text.annotatedString
+import androidx.ui.text.style.TextAlign
+import androidx.ui.unit.*
 import ooo.trankvila.silikahorlogo.ui.Saira
 import ooo.trankvila.silikahorlogo.ui.shadow
+import ooo.trankvila.silikahorlogo.ui.shadowStyle
 
 @Composable
 fun TickerTape(entries: List<TickerTapeEntry>) {
-    val offsetProperty = IntPropKey("offset")
-    val scroll = transitionDefinition {
-        state("start") {
-            this[offsetProperty] = 0
-        }
-        state("end") {
-            this[offsetProperty] = -2000
-        }
-
-        transition("start" to "end") {
-            offsetProperty using tween {
-                duration = 20000
-                easing = LinearEasing
-            }
+    val handler = Handler(Looper.getMainLooper())
+    val tickerTapeState = state { 0 }
+    val updater = object : Runnable {
+        override fun run() {
+            tickerTapeState.value = (tickerTapeState.value + 1) % entries.size
+            handler.postDelayed(this, 15_000)
         }
     }
-    Transition(definition = scroll, toState = "end", initState = "start") {
-        Row(
-            modifier = Modifier.padding(top = 8.dp).offset(x = it[offsetProperty].dp)
-                .widthIn(Dp.Hairline, Dp.Infinity)
-        ) {
-            entries.forEachIndexed { index, tickerTapeEntry ->
-                Text(
-                    text = tickerTapeEntry.text,
-                    style = shadow,
-                    fontFamily = Saira,
-                    fontSize = 25.sp,
-                    maxLines = 1,
-                    softWrap = false
-                )
-                if (index < entries.size - 1) {
-                    Text(
-                        text = "|",
-                        modifier = Modifier.padding(horizontal = 10.dp),
-                        fontFamily = Saira,
-                        fontSize = 25.sp
-                    )
-                }
-            }
-        }
+    handler.postDelayed(updater, 15000)
+    Crossfade(current = tickerTapeState.value) {
+        val entry = entries[it]
+        Text(
+            text = entry.title,
+            modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+            style = shadow,
+            fontFamily = Saira,
+            textAlign = TextAlign.Center,
+            fontSize = 25.sp
+        )
     }
 }
 
-data class TickerTapeEntry(val text: String, val onClick: () -> Unit)
+data class TickerTapeEntry(val title: String, val onClick: () -> Unit)

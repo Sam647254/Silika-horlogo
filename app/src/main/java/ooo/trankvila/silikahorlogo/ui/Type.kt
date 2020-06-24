@@ -36,3 +36,4 @@ val SairaSemibold = fontFamily(ResourceFont(R.font.saira_semibold))
 val TimeShadow = TextStyle(shadow = Shadow(color = Color.White, blurRadius = 10F))
 
 val shadow = TextStyle(shadow = Shadow(color = Color.White, blurRadius = 3F))
+val shadowStyle = Shadow(color = Color.White, blurRadius = 3F)

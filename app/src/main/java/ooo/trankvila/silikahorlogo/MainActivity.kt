@@ -112,7 +112,7 @@ class MainActivity : AppCompatActivity() {
                         Background(applicationContext, clockState.value.date, clockState.value.time)
                         TickerTape(entries = (0..10).map {
                             TickerTapeEntry("Ticker tape entry for $it") {
-                                Log.d("MainActivity", "Clicked $it")
+                                Log.d("MainActivity", "Ticker tape entry $it clicked")
                             }
                         })
                         graphState.value?.let {
