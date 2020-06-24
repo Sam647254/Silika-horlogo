@@ -30,6 +30,8 @@ import androidx.ui.layout.fillMaxSize
 import androidx.ui.layout.padding
 import androidx.ui.material.Surface
 import androidx.ui.unit.dp
+import androidx.ui.unit.ipx
+import androidx.ui.unit.px
 import ooo.trankvila.silikahorlogo.komponantoj.AwairDataStrip
 import ooo.trankvila.silikahorlogo.komponantoj.Clock
 import ooo.trankvila.silikahorlogo.komponantoj.StatisticDisplay

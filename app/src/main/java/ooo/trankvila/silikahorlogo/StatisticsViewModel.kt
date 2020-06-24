@@ -14,6 +14,9 @@ import org.joda.time.LocalDate
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URL
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
+import java.util.*
 import javax.net.ssl.HttpsURLConnection
 
 class StatisticsViewModel : ViewModel() {
@@ -31,25 +34,55 @@ class StatisticsViewModel : ViewModel() {
     private val statistics = listOf({
         val total = fetchData(CASES_PAYLOAD) ?: return@listOf null
         val new = fetchData(NEW_CASES_PAYLOAD) ?: return@listOf null
-        Statistic(total.toString(), "($new new)", "cases in Santa Clara")
+        Statistic(
+            total.toString(),
+            "($new new)",
+            "cases in Santa Clara (Santa Clara Public Health)"
+        )
     }, {
         val data =
             fetch("https://data.sccgov.org/resource/59wk-iusg.json?city=Mountain View").let(::JSONArray)
         Statistic(
             data.getJSONObject(0).getString("cases"), "(${
             data.getJSONObject(0).getString("rate")
-            }/100K)", "cases in Mountain View"
+            }/100K)", "cases in Mountain View (Santa Clara Open Data Portal)"
         )
     }, {
         val data =
-            fetch("https://data.covidactnow.org/latest/us/states/CA.OBSERVED_INTERVENTION.timeseries.json").let(
+            fetch("https://data.covidactnow.org/latest/us/states/CA.OBSERVED_INTERVENTION.json").let(
                 ::JSONObject
             )
         Statistic(
             "%.3f".format(data.getJSONObject("projections").getDouble("Rt")),
             null,
-            "California R-effective (as of ${LocalDate.parse(data.getString("lastUpdatedDate"))
-                .let { SilicanDate.fromGregorian(it) }.shortDate})"
+            "California R-effective as of ${LocalDate.parse(data.getString("lastUpdatedDate"))
+                .let { SilicanDate.fromGregorian(it) }.shortDate} (CovidActNow.org)"
+        )
+    }, {
+        val data =
+            fetch("https://data.covidactnow.org/latest/us/counties/06085.OBSERVED_INTERVENTION.json").let(
+                ::JSONObject
+            )
+        Statistic(
+            "%.3f".format(data.getJSONObject("projections").getDouble("Rt")),
+            null,
+            "Santa Clara R-effective as of ${LocalDate.parse(data.getString("lastUpdatedDate"))
+                .let(SilicanDate.Companion::fromGregorian).shortDate} (CovidActNow.org)"
+        )
+    }, {
+        val data =
+            fetch("https://covidtracking.com/api/v1/states/ca/current.json").let(::JSONObject)
+        val total = data.getInt("positive").let {
+            if (it >= 10_000) "%,d".format(Locale.CANADA_FRENCH, it) else it.toString()
+        }
+        val new = data.getInt("positiveIncrease").let {
+            if (it >= 10_000) "%,d".format(Locale.CANADA_FRENCH, it) else it.toString()
+        }
+        Statistic(
+            total,
+            "($new)",
+            "cases in California as of ${data.getString("date").let(LocalDate::parse)
+                .let(SilicanDate.Companion::fromGregorian).shortDate}"
         )
     })
     private var statisticIndex = 0
@@ -75,7 +108,7 @@ class StatisticsViewModel : ViewModel() {
                         }
                     }
                 }
-                handler.postDelayed(this, 20000)
+                handler.postDelayed(this, 10000)
             }
         }
         statisticUpdater.run()
