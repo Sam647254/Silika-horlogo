@@ -47,6 +47,7 @@ class MainActivity : AppCompatActivity() {
     private val clockViewModel: SilicanClockViewModel by viewModels()
     private val awairViewModel: AwairViewModel by viewModels()
     private val statisticsViewModel: StatisticsViewModel by viewModels()
+    private val newsViewModel: NewsViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,6 +62,7 @@ class MainActivity : AppCompatActivity() {
             val statisticsState = state<Statistic?> { null }
             val statisticsTransitionState = state { "visible" }
             val graphState = state<List<Int>?> { null }
+            val newsState = state<TickerTapeEntry?> { null }
 
             clockViewModel.currentDate.observe(this, Observer { newState ->
                 clockState.value = newState
@@ -80,6 +82,10 @@ class MainActivity : AppCompatActivity() {
 
             statisticsViewModel.graph.observe(this, Observer { data ->
                 graphState.value = data
+            })
+
+            newsViewModel.entry.observe(this, Observer { entry ->
+                newsState.value = entry
             })
 
             val opacity = FloatPropKey("Opacity")
@@ -110,11 +116,9 @@ class MainActivity : AppCompatActivity() {
                 Surface {
                     Stack {
                         Background(applicationContext, clockState.value.date, clockState.value.time)
-                        TickerTape(entries = (0..10).map {
-                            TickerTapeEntry("Ticker tape entry for $it") {
-                                Log.d("MainActivity", "Ticker tape entry $it clicked")
-                            }
-                        })
+                        newsState.value?.let {
+                            TickerTape(entry = it)
+                        }
                         graphState.value?.let {
                             Fonto(stats = it)
                         }
