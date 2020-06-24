@@ -32,6 +32,7 @@ class StatisticsViewModel : ViewModel() {
     }
 
     val statistic = MutableLiveData<Statistic>()
+    val graph = MutableLiveData<List<Int>>()
     val cache = mutableMapOf<Int, Statistic>()
     private val statistics = listOf({
         val total = fetchData(CASES_PAYLOAD) ?: return@listOf null
@@ -111,6 +112,12 @@ class StatisticsViewModel : ViewModel() {
             }
         }
         statisticUpdater.run()
+
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                fetchGraph().let(graph::postValue)
+            }
+        }
     }
 
     private fun fetch(url: String) =
@@ -118,6 +125,13 @@ class StatisticsViewModel : ViewModel() {
             requestMethod = "GET"
             addRequestProperty("X-App-Token", SocrataAppToken)
             inputStream.bufferedReader().readText()
+        }
+
+    private fun fetchGraph() =
+        fetch("https://data.sccgov.org/resource/6cnm-gchg.json").let(::JSONArray).let {
+            (it.length() - 1 downTo 0).map { i ->
+                it.getJSONObject(i).getString("new_cases").toInt()
+            }
         }
 
     private fun fetchData(payload: String): Int? {

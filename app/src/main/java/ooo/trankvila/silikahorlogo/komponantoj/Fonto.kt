@@ -7,26 +7,23 @@ import androidx.ui.foundation.Canvas
 import androidx.ui.geometry.Offset
 import androidx.ui.geometry.Size
 import androidx.ui.graphics.Color
-import androidx.ui.graphics.Paint
 import androidx.ui.layout.fillMaxSize
-import androidx.ui.unit.dp
 
-private val gap = 1
-private val barWidth = 5F
+private val gap = 3
+private val barWidth = 10F
 
 @Composable
-fun Fonto(stats: Sequence<Int>) {
-    val paint = remember {
-        Color.White.copy(alpha = 0.4F)
-    }
+fun Fonto(stats: List<Int>) {
     Canvas(modifier = Modifier.fillMaxSize()) {
-        val bars = stats.take((size.width / (gap + barWidth)).toInt()).toList()
+        val bars = stats.take((size.width / (gap + barWidth)).toInt() + 1).toList()
         val max = bars.max()!!
         bars.forEachIndexed { index, bar ->
+            val dx = size.width - index * (barWidth + gap) - barWidth
+            val dy = bar / max.toFloat() * 0.95F * size.height
             drawRect(
-                paint,
-                Offset(size.width - index * (barWidth + gap) - barWidth, bar / max * 0.95F),
-                Size(barWidth, bar / max * 0.95F)
+                Color.White.copy(alpha = 0.3F),
+                Offset(dx, size.height - dy),
+                Size(barWidth, bar / max.toFloat() * 0.95F * size.height)
             )
         }
     }

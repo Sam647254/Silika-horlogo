@@ -34,6 +34,7 @@ import androidx.ui.unit.ipx
 import androidx.ui.unit.px
 import ooo.trankvila.silikahorlogo.komponantoj.AwairDataStrip
 import ooo.trankvila.silikahorlogo.komponantoj.Clock
+import ooo.trankvila.silikahorlogo.komponantoj.Fonto
 import ooo.trankvila.silikahorlogo.komponantoj.StatisticDisplay
 import ooo.trankvila.silikahorlogo.ui.SilikaHorloĝoTheme
 import ooo.trankvila.silikahorlogo.ui.phaseColours
@@ -61,6 +62,7 @@ class MainActivity : AppCompatActivity() {
             val awairDataState = state<AwairData?> { null }
             val statisticsState = state<Statistic?> { null }
             val statisticsTransitionState = state { "visible" }
+            val graphState = state<List<Int>?> { null }
 
             clockViewModel.currentDate.observe(this, Observer { newState ->
                 clockState.value = newState
@@ -76,6 +78,10 @@ class MainActivity : AppCompatActivity() {
                     statisticsState.value = it
                     statisticsTransitionState.value = "visible"
                 }, 1000)
+            })
+
+            statisticsViewModel.graph.observe(this, Observer { data ->
+                graphState.value = data
             })
 
             val opacity = FloatPropKey("Opacity")
@@ -106,6 +112,9 @@ class MainActivity : AppCompatActivity() {
                 Surface {
                     Stack {
                         Background(applicationContext, clockState.value.date, clockState.value.time)
+                        graphState.value?.let {
+                            Fonto(stats = it)
+                        }
                         awairDataState.value?.let {
                             AwairDataStrip(it)
                         }
