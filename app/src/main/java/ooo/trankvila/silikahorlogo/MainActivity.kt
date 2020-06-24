@@ -158,7 +158,7 @@ fun ShelterInPlaceCounter() {
         statistic = Statistic(
             duration.toString(),
             null,
-            "days since shelter-in-place started"
+            "days of shelter-in-place"
         ), onClick = {}, alignment = Alignment.Start
     )
 }

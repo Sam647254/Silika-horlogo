@@ -11,6 +11,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.joda.time.LocalDate
+import org.joda.time.format.DateTimeFormat
+import org.joda.time.format.DateTimeFormatter
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URL
@@ -35,8 +37,8 @@ class StatisticsViewModel : ViewModel() {
         val total = fetchData(CASES_PAYLOAD) ?: return@listOf null
         val new = fetchData(NEW_CASES_PAYLOAD) ?: return@listOf null
         Statistic(
-            total.toString(),
-            "($new new)",
+            formatNumber(total),
+            "(${formatNumber(new)} new)",
             "cases in Santa Clara (Santa Clara Public Health)"
         )
     }, {
@@ -72,17 +74,14 @@ class StatisticsViewModel : ViewModel() {
     }, {
         val data =
             fetch("https://covidtracking.com/api/v1/states/ca/current.json").let(::JSONObject)
-        val total = data.getInt("positive").let {
-            if (it >= 10_000) "%,d".format(Locale.CANADA_FRENCH, it) else it.toString()
-        }
-        val new = data.getInt("positiveIncrease").let {
-            if (it >= 10_000) "%,d".format(Locale.CANADA_FRENCH, it) else it.toString()
-        }
+        val total = data.getInt("positive").let(::formatNumber)
+        val new = data.getInt("positiveIncrease").let(::formatNumber)
         Statistic(
             total,
-            "($new)",
-            "cases in California as of ${data.getString("date").let(LocalDate::parse)
-                .let(SilicanDate.Companion::fromGregorian).shortDate}"
+            "($new new)",
+            "cases in California as of ${data.getInt("date").let {
+                LocalDate.parse(it.toString(), DateTimeFormat.forPattern("YYYYMMdd"))
+            }.let(SilicanDate.Companion::fromGregorian).shortDate} (The COVID Tracking Project)"
         )
     })
     private var statisticIndex = 0
@@ -145,6 +144,9 @@ class StatisticsViewModel : ViewModel() {
                 .getInt("M0")
         }
     }
+
+    private fun formatNumber(it: Int) =
+        if (it >= 10_000) "%,d".format(Locale.CANADA_FRENCH, it) else it.toString()
 }
 
 typealias StatisticSource = () -> Statistic?
