@@ -46,7 +46,7 @@ fun AwairDataField(value: String, label: String, unit: String = "") {
 @Composable
 fun AwairDataStrip(data: AwairData) {
     Row(
-        modifier = Modifier.padding(vertical = 10.dp).fillMaxWidth(),
+        modifier = Modifier.padding(vertical = 10.dp).fillMaxWidth().offset(y = 40.dp),
         horizontalArrangement = Arrangement.Center
     ) {
         AwairDataField(

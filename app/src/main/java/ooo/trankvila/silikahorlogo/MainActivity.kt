@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
@@ -32,10 +33,7 @@ import androidx.ui.material.Surface
 import androidx.ui.unit.dp
 import androidx.ui.unit.ipx
 import androidx.ui.unit.px
-import ooo.trankvila.silikahorlogo.komponantoj.AwairDataStrip
-import ooo.trankvila.silikahorlogo.komponantoj.Clock
-import ooo.trankvila.silikahorlogo.komponantoj.Fonto
-import ooo.trankvila.silikahorlogo.komponantoj.StatisticDisplay
+import ooo.trankvila.silikahorlogo.komponantoj.*
 import ooo.trankvila.silikahorlogo.ui.SilikaHorloĝoTheme
 import ooo.trankvila.silikahorlogo.ui.phaseColours
 import ooo.trankvila.silikahorlogo.ui.weekdayColours
@@ -112,6 +110,11 @@ class MainActivity : AppCompatActivity() {
                 Surface {
                     Stack {
                         Background(applicationContext, clockState.value.date, clockState.value.time)
+                        TickerTape(entries = (0..10).map {
+                            TickerTapeEntry("Ticker tape entry for $it") {
+                                Log.d("MainActivity", "Clicked $it")
+                            }
+                        })
                         graphState.value?.let {
                             Fonto(stats = it)
                         }

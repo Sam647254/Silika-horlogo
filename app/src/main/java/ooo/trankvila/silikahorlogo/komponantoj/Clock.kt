@@ -20,7 +20,7 @@ fun Clock(dateTime: SilicanDateTime) {
     val time = dateTime.time
     Row(
         modifier = Modifier.fillMaxSize()
-            .offset(y = 170.dp),
+            .offset(y = 190.dp),
         horizontalArrangement = Arrangement.Center
     ) {
         Column(horizontalGravity = Alignment.End) {
