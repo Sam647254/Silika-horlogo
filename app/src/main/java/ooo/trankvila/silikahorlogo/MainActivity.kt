@@ -1,6 +1,8 @@
 package ooo.trankvila.silikahorlogo
 
 import android.content.Context
+import android.media.AudioAttributes
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -33,6 +35,14 @@ import androidx.ui.material.Surface
 import androidx.ui.unit.dp
 import androidx.ui.unit.ipx
 import androidx.ui.unit.px
+import com.amazonaws.auth.CognitoCachingCredentialsProvider
+import com.amazonaws.auth.CognitoCredentialsProvider
+import com.amazonaws.regions.Regions
+import com.amazonaws.services.polly.AmazonPollyClient
+import com.amazonaws.services.polly.AmazonPollyPresigningClient
+import com.amazonaws.services.polly.model.Engine
+import com.amazonaws.services.polly.model.OutputFormat
+import com.amazonaws.services.polly.model.SynthesizeSpeechPresignRequest
 import ooo.trankvila.silikahorlogo.komponantoj.*
 import ooo.trankvila.silikahorlogo.ui.SilikaHorloĝoTheme
 import ooo.trankvila.silikahorlogo.ui.phaseColours
@@ -49,10 +59,44 @@ class MainActivity : AppCompatActivity() {
     private val statisticsViewModel: StatisticsViewModel by viewModels()
     private val newsViewModel: NewsViewModel by viewModels()
 
+    private lateinit var credentialsProvider: CognitoCredentialsProvider
+    private lateinit var pollyClient: AmazonPollyPresigningClient
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        credentialsProvider = CognitoCachingCredentialsProvider(
+            applicationContext,
+            CognitoIdentityPoolId,
+            Regions.US_WEST_2
+        )
+        pollyClient = AmazonPollyPresigningClient(credentialsProvider)
+
+        newsViewModel.synthesizeSpeech = { text ->
+            val request = SynthesizeSpeechPresignRequest().apply {
+                this.text = text
+                voiceId = "Emma"
+                engine = Engine.Neural
+                setOutputFormat(OutputFormat.Mp3)
+            }
+            val url = pollyClient.getPresignedSynthesizeSpeechUrl(request)
+            MediaPlayer().apply {
+                setAudioAttributes(
+                    AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                        .build()
+                )
+                setDataSource(url.toString())
+                prepareAsync()
+                setOnPreparedListener {
+                    it.start()
+                }
+                setOnCompletionListener {
+                    it.release()
+                }
+            }
+        }
 
         val handler = Handler(Looper.getMainLooper())
 
