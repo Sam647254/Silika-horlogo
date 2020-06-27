@@ -23,6 +23,7 @@ import androidx.ui.layout.*
 import androidx.ui.text.SpanStyle
 import androidx.ui.text.annotatedString
 import androidx.ui.text.style.TextAlign
+import androidx.ui.text.style.TextOverflow
 import androidx.ui.unit.*
 import ooo.trankvila.silikahorlogo.ui.Saira
 import ooo.trankvila.silikahorlogo.ui.shadow
@@ -38,7 +39,9 @@ fun TickerTape(entry: TickerTapeEntry) {
             style = shadow,
             fontFamily = Saira,
             textAlign = TextAlign.Center,
-            fontSize = 25.sp
+            fontSize = 25.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
