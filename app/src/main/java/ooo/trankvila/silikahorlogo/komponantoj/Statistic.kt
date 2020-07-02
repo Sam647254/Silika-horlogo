@@ -1,5 +1,7 @@
 package ooo.trankvila.silikahorlogo.komponantoj
 
+import androidx.animation.FloatPropKey
+import androidx.animation.transitionDefinition
 import androidx.compose.Composable
 import androidx.compose.state
 import androidx.ui.core.Alignment

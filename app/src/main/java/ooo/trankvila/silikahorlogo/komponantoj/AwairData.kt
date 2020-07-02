@@ -1,8 +1,14 @@
 package ooo.trankvila.silikahorlogo.komponantoj
 
+import androidx.animation.FastOutLinearInEasing
+import androidx.animation.FloatPropKey
+import androidx.animation.Infinite
+import androidx.animation.transitionDefinition
 import androidx.compose.Composable
+import androidx.ui.animation.Transition
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
+import androidx.ui.core.drawOpacity
 import androidx.ui.foundation.Text
 import androidx.ui.graphics.Color
 import androidx.ui.layout.*
@@ -26,34 +32,62 @@ fun <T : Comparable<T>> AwairDataField(
         in warning1Range -> if (value > normalRange.endInclusive) warning3 else warning1
         else -> if (value > warning1Range.endInclusive) warning4 else warning2
     }
-    Column(horizontalGravity = Alignment.CenterHorizontally) {
-        Text(
-            annotatedString {
-                pushStyle(SpanStyle(fontSize = 50.sp))
-                append(if (value is Int) value.toString() else "%.1f".format(value))
-                if (unit.isNotEmpty()) {
-                    pop()
-                    pushStyle(SpanStyle(fontSize = 25.sp))
-                    append(' ')
-                    append(unit)
+    val opacity = FloatPropKey("opacity")
+    val pulse = transitionDefinition {
+        state("start") {
+            this[opacity] = 1F
+        }
+        state("end") {
+            this[opacity] = 0.4F
+        }
+        transition("start", "end") {
+            opacity using repeatable {
+                animation = tween {
+                    duration = 1500
+                    easing = FastOutLinearInEasing
                 }
-            },
-            fontFamily = Saira,
-            style = shadow,
-            modifier = Modifier.padding(horizontal = 15.dp),
-            maxLines = 1,
-            softWrap = false,
-            color = color
-        )
-        Text(
-            label,
-            fontSize = 20.sp,
-            fontFamily = Saira,
-            style = shadow,
-            modifier = Modifier.offset(y = (-10).dp),
-            color = color
-        )
+                iterations = Infinite
+            }
+        }
     }
+    Transition(
+        definition = pulse,
+        toState = if (value in warning1Range) "start" else "end",
+        initState = "start"
+    ) { state ->
+        Column(
+            horizontalGravity = Alignment.CenterHorizontally, modifier =
+            Modifier.drawOpacity(state[opacity])
+        ) {
+            Text(
+                annotatedString {
+                    pushStyle(SpanStyle(fontSize = 50.sp))
+                    append(if (value is Int) value.toString() else "%.1f".format(value))
+                    if (unit.isNotEmpty()) {
+                        pop()
+                        pushStyle(SpanStyle(fontSize = 25.sp))
+                        append(' ')
+                        append(unit)
+                    }
+                },
+                fontFamily = Saira,
+                style = shadow,
+                modifier = Modifier.padding(horizontal = 15.dp),
+                maxLines = 1,
+                softWrap = false,
+                color = color
+            )
+            Text(
+                label,
+                fontSize = 20.sp,
+                fontFamily = Saira,
+                style = shadow,
+                modifier = Modifier.offset(y = (-10).dp),
+                color = color
+            )
+        }
+    }
+
 }
 
 @Composable
