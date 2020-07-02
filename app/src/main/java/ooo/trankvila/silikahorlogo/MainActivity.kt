@@ -220,7 +220,8 @@ class MainActivity : AppCompatActivity() {
 
 @Composable
 fun ShelterInPlaceCounter() {
-    val duration = Days.daysBetween(startOfShelterInPlace, LocalDate.now()).days
+    val dateState = state { LocalDate.now() }
+    val duration = Days.daysBetween(startOfShelterInPlace, dateState.value).days
     StatisticDisplay(
         statistic = Statistic(
             duration.toString(),
