@@ -43,6 +43,8 @@ import com.amazonaws.services.polly.AmazonPollyPresigningClient
 import com.amazonaws.services.polly.model.Engine
 import com.amazonaws.services.polly.model.OutputFormat
 import com.amazonaws.services.polly.model.SynthesizeSpeechPresignRequest
+import com.android.volley.RequestQueue
+import com.android.volley.toolbox.Volley
 import ooo.trankvila.silikahorlogo.komponantoj.*
 import ooo.trankvila.silikahorlogo.ui.SilikaHorloĝoTheme
 import ooo.trankvila.silikahorlogo.ui.phaseColours
@@ -61,11 +63,14 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var credentialsProvider: CognitoCredentialsProvider
     private lateinit var pollyClient: AmazonPollyPresigningClient
+    private lateinit var volleyQueue: RequestQueue
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        volleyQueue = Volley.newRequestQueue(this)
 
         newsViewModel.synthesizeSpeech = { text ->
             if (!::credentialsProvider.isInitialized) {
@@ -113,6 +118,7 @@ class MainActivity : AppCompatActivity() {
                 clockState.value = newState
             })
 
+            awairViewModel.launch(volleyQueue)
             awairViewModel.data.observe(this, Observer { newData ->
                 awairDataState.value = newData
             })
