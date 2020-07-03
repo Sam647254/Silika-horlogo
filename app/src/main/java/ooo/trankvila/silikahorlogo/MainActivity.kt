@@ -103,6 +103,7 @@ class MainActivity : AppCompatActivity() {
             val awairDataState = state<AwairData?> { null }
             val statisticsState = state<DataDisplay?> { null }
             val statisticsTransitionState = state { "visible" }
+            val weatherTransitionState = state { "visible" }
             val graphState = state<List<Int>?> { null }
             val newsState = state<TickerTapeEntry?> { null }
             val weatherState = state<DataDisplay?> { null }
@@ -133,7 +134,11 @@ class MainActivity : AppCompatActivity() {
             })
 
             weatherViewModel.data.observe(this, Observer { data ->
-                weatherState.value = data
+                weatherTransitionState.value = "invisible"
+                handler.postDelayed({
+                    weatherState.value = data
+                    weatherTransitionState.value = "visible"
+                }, 1000)
             })
             weatherViewModel.launch(volleyQueue)
 
@@ -175,16 +180,22 @@ class MainActivity : AppCompatActivity() {
                             AwairDataStrip(it, if (newsState.value != null) 40.dp else 10.dp)
                         }
                         Clock(clockState.value)
-                        Box(
-                            modifier = Modifier.fillMaxSize().padding(10.dp),
-                            gravity = Alignment.BottomStart
+                        Transition(
+                            definition = fadeTransition, toState =
+                            weatherTransitionState.value
                         ) {
-                            weatherState.value?.let {
-                                StatisticDisplay(
-                                    statistic = it,
-                                    onClick = {},
-                                    alignment = Alignment.Start
-                                )
+                            Box(
+                                modifier = Modifier.fillMaxSize().padding(10.dp)
+                                    .drawOpacity(it[opacity]),
+                                gravity = Alignment.BottomStart
+                            ) {
+                                weatherState.value?.let {
+                                    StatisticDisplay(
+                                        statistic = it,
+                                        onClick = {},
+                                        alignment = Alignment.Start
+                                    )
+                                }
                             }
                         }
                         Transition(

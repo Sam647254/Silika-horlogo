@@ -13,6 +13,12 @@ val warning2 = Color(0xFFFb9105)
 val warning3 = Color(0xFFf09595)
 val warning4 = Color(0xFFc92222)
 
+val chaos = Color(0xFF895A04)
+val serenity = Color(0xFF38B0E8)
+val fervidity = Color(0xFFE84848)
+
+val phases = listOf(chaos, serenity, fervidity)
+
 val weekdayColours = listOf(
     R.color.lavender,
     R.color.carnation,

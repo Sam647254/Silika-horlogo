@@ -17,10 +17,9 @@ import androidx.ui.text.annotatedString
 import androidx.ui.unit.IntPx
 import androidx.ui.unit.dp
 import androidx.ui.unit.sp
-import ooo.trankvila.silikahorlogo.DataDisplay
-import ooo.trankvila.silikahorlogo.Statistic
-import ooo.trankvila.silikahorlogo.TextData
+import ooo.trankvila.silikahorlogo.*
 import ooo.trankvila.silikahorlogo.ui.Saira
+import ooo.trankvila.silikahorlogo.ui.phases
 import ooo.trankvila.silikahorlogo.ui.shadow
 
 @Composable
@@ -42,6 +41,28 @@ fun StatisticDisplay(
                             append(' ')
                             append(it)
                         }
+                    },
+                    fontSize = 80.sp,
+                    fontFamily = Saira,
+                    style = shadow,
+                    modifier = Modifier.offset(y = 25.dp)
+                )
+                Text(
+                    text = statistic.caption,
+                    fontSize = 20.sp,
+                    fontFamily = Saira,
+                    style = shadow
+                )
+            }
+            is TimeData -> {
+                val time = SilicanTime.fromStandard(statistic.time)
+                Text(
+                    text = annotatedString {
+                        pushStyle(SpanStyle(fontSize = 80.sp, color = phases[time.phase]))
+                        append(time.hour.toString())
+                        append(' ')
+                        pop()
+                        append(time.minute.toString().padStart(2, '0'))
                     },
                     fontSize = 80.sp,
                     fontFamily = Saira,

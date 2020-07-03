@@ -8,6 +8,8 @@ import androidx.lifecycle.ViewModel
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.JsonObjectRequest
 import org.joda.time.LocalDate
+import org.joda.time.LocalDateTime
+import org.joda.time.LocalTime
 
 private val startOfShelterInPlace = LocalDate(2020, 3, 3)
 
@@ -39,8 +41,10 @@ class WeatherViewModel : ViewModel() {
                         response.getJSONObject("main").getInt("humidity"),
                         response.getJSONObject("wind").getDouble("speed"),
                         response.getJSONObject("wind").getInt("deg"),
-                        response.getJSONObject("sys").getLong("sunrise").let(::LocalDate),
-                        response.getJSONObject("sys").getLong("sunset").let(::LocalDate)
+                        response.getJSONObject("sys").getLong("sunrise").let { it * 1000 }
+                            .let(::LocalDateTime),
+                        response.getJSONObject("sys").getLong("sunset").let { it * 1000 }
+                            .let(::LocalDateTime)
                     )
                     val start = dataDisplays.isEmpty()
                     dataDisplays = listOf(
@@ -49,7 +53,14 @@ class WeatherViewModel : ViewModel() {
                             "%.1f".format(weatherResponse.temperature),
                             "°C",
                             "Current temperature"
-                        )
+                        ),
+                        TextData(weatherResponse.humidity.toString(), "%", "Relative humidity"),
+                        TextData(
+                            "%.1f".format(weatherResponse.wind),
+                            "km/h", "${windDirection(weatherResponse.windDegree)} wind"
+                        ),
+                        TimeData(weatherResponse.sunrise.toLocalTime(), "Sunrise"),
+                        TimeData(weatherResponse.sunset.toLocalTime(), "Sunset")
                     )
                     if (start) updater.run()
                 }, {
@@ -65,7 +76,7 @@ class WeatherViewModel : ViewModel() {
 sealed class DataDisplay
 data class TextData(val text1: String, val text2: String?, val caption: String) : DataDisplay()
 data class IconData(val drawable: Int, val text: String, val caption: String) : DataDisplay()
-data class TimeData(val time: SilicanTime, val caption: String) : DataDisplay()
+data class TimeData(val time: LocalTime, val caption: String) : DataDisplay()
 data class LazyTextData(val text1: () -> String, val text2: (() -> String)?, val caption: String) :
     DataDisplay()
 
@@ -78,6 +89,17 @@ data class WeatherResponse(
     val humidity: Int,
     val wind: Double,
     val windDegree: Int,
-    val sunrise: LocalDate,
-    val sunset: LocalDate
+    val sunrise: LocalDateTime,
+    val sunset: LocalDateTime
 )
+
+private fun windDirection(degree: Int) = when (degree) {
+    in 0..25, in 335..359 -> "Northerly"
+    in 26..65 -> "North-easterly"
+    in 66..115 -> "Easterly"
+    in 116..155 -> "South-easterly"
+    in 156..205 -> "Southerly"
+    in 206..245 -> "South-westerly"
+    in 246..305 -> "Westerly"
+    else -> "North-westerly"
+}
