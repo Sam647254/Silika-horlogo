@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.JsonObjectRequest
+import org.joda.time.Days
 import org.joda.time.LocalDate
 import org.joda.time.LocalDateTime
 import org.joda.time.LocalTime
@@ -60,7 +61,10 @@ class WeatherViewModel : ViewModel() {
                             "km/h", "${windDirection(weatherResponse.windDegree)} wind"
                         ),
                         TimeData(weatherResponse.sunrise.toLocalTime(), "Sunrise"),
-                        TimeData(weatherResponse.sunset.toLocalTime(), "Sunset")
+                        TimeData(weatherResponse.sunset.toLocalTime(), "Sunset"),
+                        LazyTextData({
+                            Days.daysBetween(startOfShelterInPlace, LocalDate.now()).days.toString()
+                        }, null, "days of shelter-in-place")
                     )
                     if (start) updater.run()
                 }, {

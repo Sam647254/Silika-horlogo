@@ -21,9 +21,9 @@ internal const val daysIn400Years = 400 * 364 + 7 * (400 / 5 - 400 / 40 + 1)
 internal const val daysIn40Years = 40 * 364 + 7 * (40 / 5 - 1)
 internal const val daysIn5Years = 5 * 364 + 7
 
-class SilicanClockViewModel : ViewModel() {
+class ClockViewModel : ViewModel() {
 
-    val currentDate = MutableLiveData<SilicanDateTime>()
+    val currentDate = MutableLiveData<LocalDateTime>()
 
     init {
         val handler = Handler(Looper.getMainLooper())
@@ -31,7 +31,7 @@ class SilicanClockViewModel : ViewModel() {
         val clockUpdater = object : Runnable {
             override fun run() {
                 val now = LocalTime.now()
-                currentDate.postValue(SilicanDateTime.now)
+                currentDate.postValue(LocalDateTime.now())
                 val nextMinute =
                     now.withFieldAdded(DurationFieldType.minutes(), 1).withSecondOfMinute(0)
                 handler.postDelayed(
@@ -47,6 +47,12 @@ class SilicanClockViewModel : ViewModel() {
 data class SilicanDateTime(val date: SilicanDate, val time: SilicanTime) {
     companion object {
         val now get() = SilicanDateTime(SilicanDate.now, SilicanTime.now)
+
+        fun fromLocalDateTime(localDateTime: LocalDateTime) =
+            SilicanDateTime(
+                SilicanDate.fromGregorian(localDateTime.toLocalDate()),
+                SilicanTime.fromStandard(localDateTime.toLocalTime())
+            )
     }
 }
 

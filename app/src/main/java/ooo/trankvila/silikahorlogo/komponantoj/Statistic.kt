@@ -76,6 +76,32 @@ fun StatisticDisplay(
                     style = shadow
                 )
             }
+            is LazyTextData -> {
+                val text1 = statistic.text1()
+                val text2 = statistic.text2?.invoke()
+                Text(
+                    text = annotatedString {
+                        pushStyle(SpanStyle(fontSize = 80.sp))
+                        append(text1)
+                        text2?.let {
+                            pop()
+                            pushStyle(SpanStyle(fontSize = 50.sp))
+                            append(' ')
+                            append(it)
+                        }
+                    },
+                    fontSize = 80.sp,
+                    fontFamily = Saira,
+                    style = shadow,
+                    modifier = Modifier.offset(y = 25.dp)
+                )
+                Text(
+                    text = statistic.caption,
+                    fontSize = 20.sp,
+                    fontFamily = Saira,
+                    style = shadow
+                )
+            }
             else -> TODO()
         }
     }

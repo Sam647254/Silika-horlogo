@@ -14,6 +14,7 @@ import androidx.animation.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.Composable
 import androidx.compose.state
+import androidx.core.content.edit
 import androidx.lifecycle.Observer
 import androidx.ui.animation.Transition
 import androidx.ui.core.Alignment
@@ -43,11 +44,10 @@ import ooo.trankvila.silikahorlogo.komponantoj.*
 import ooo.trankvila.silikahorlogo.ui.SilikaHorloĝoTheme
 import ooo.trankvila.silikahorlogo.ui.phaseColours
 import ooo.trankvila.silikahorlogo.ui.weekdayColours
-import org.joda.time.Days
-import org.joda.time.LocalDate
+import org.joda.time.LocalDateTime
 
 class MainActivity : AppCompatActivity() {
-    private val clockViewModel: SilicanClockViewModel by viewModels()
+    private val clockViewModel: ClockViewModel by viewModels()
     private val awairViewModel: AwairViewModel by viewModels()
     private val statisticsViewModel: StatisticsViewModel by viewModels()
     private val newsViewModel: NewsViewModel by viewModels()
@@ -97,9 +97,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         val handler = Handler(Looper.getMainLooper())
+        val preferences = getPreferences(MODE_PRIVATE)
 
         setContent {
-            val clockState = state { SilicanDateTime.now }
+            val clockState = state { LocalDateTime.now() }
             val awairDataState = state<AwairData?> { null }
             val statisticsState = state<DataDisplay?> { null }
             val statisticsTransitionState = state { "visible" }
@@ -107,6 +108,7 @@ class MainActivity : AppCompatActivity() {
             val graphState = state<List<Int>?> { null }
             val newsState = state<TickerTapeEntry?> { null }
             val weatherState = state<DataDisplay?> { null }
+            val clockFormatState = state { preferences.getBoolean("useSilican", false) }
 
             clockViewModel.currentDate.observe(this, Observer { newState ->
                 clockState.value = newState
@@ -169,7 +171,8 @@ class MainActivity : AppCompatActivity() {
             SilikaHorloĝoTheme(darkTheme = true) {
                 Surface {
                     Stack {
-                        Background(applicationContext, clockState.value.date, clockState.value.time)
+                        val silican = SilicanDateTime.fromLocalDateTime(clockState.value)
+                        Background(applicationContext, silican.date, silican.time)
                         newsState.value?.let {
                             TickerTape(entry = it)
                         }
@@ -179,7 +182,13 @@ class MainActivity : AppCompatActivity() {
                         awairDataState.value?.let {
                             AwairDataStrip(it, if (newsState.value != null) 40.dp else 10.dp)
                         }
-                        Clock(clockState.value)
+                        Clock(clockState.value, onClick = {
+                            val prev = preferences.getBoolean("useSilican", false)
+                            preferences.edit {
+                                putBoolean("useSilican", !prev)
+                                clockFormatState.value = !prev
+                            }
+                        }, useSilican = clockFormatState.value)
                         Transition(
                             definition = fadeTransition, toState =
                             weatherTransitionState.value
