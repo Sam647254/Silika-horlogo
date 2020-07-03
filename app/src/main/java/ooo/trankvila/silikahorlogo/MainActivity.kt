@@ -6,7 +6,6 @@ import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
@@ -14,7 +13,6 @@ import androidx.activity.viewModels
 import androidx.animation.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.Composable
-import androidx.compose.setValue
 import androidx.compose.state
 import androidx.lifecycle.Observer
 import androidx.ui.animation.Transition
@@ -27,18 +25,14 @@ import androidx.ui.foundation.Image
 import androidx.ui.graphics.Color
 import androidx.ui.graphics.ColorFilter
 import androidx.ui.graphics.imageFromResource
-import androidx.ui.layout.Row
 import androidx.ui.layout.Stack
 import androidx.ui.layout.fillMaxSize
 import androidx.ui.layout.padding
 import androidx.ui.material.Surface
 import androidx.ui.unit.dp
-import androidx.ui.unit.ipx
-import androidx.ui.unit.px
 import com.amazonaws.auth.CognitoCachingCredentialsProvider
 import com.amazonaws.auth.CognitoCredentialsProvider
 import com.amazonaws.regions.Regions
-import com.amazonaws.services.polly.AmazonPollyClient
 import com.amazonaws.services.polly.AmazonPollyPresigningClient
 import com.amazonaws.services.polly.model.Engine
 import com.amazonaws.services.polly.model.OutputFormat
@@ -51,15 +45,13 @@ import ooo.trankvila.silikahorlogo.ui.phaseColours
 import ooo.trankvila.silikahorlogo.ui.weekdayColours
 import org.joda.time.Days
 import org.joda.time.LocalDate
-import org.joda.time.Period
-
-private val startOfShelterInPlace = LocalDate(2020, 3, 3)
 
 class MainActivity : AppCompatActivity() {
     private val clockViewModel: SilicanClockViewModel by viewModels()
     private val awairViewModel: AwairViewModel by viewModels()
     private val statisticsViewModel: StatisticsViewModel by viewModels()
     private val newsViewModel: NewsViewModel by viewModels()
+    private val weatherViewModel: WeatherViewModel by viewModels()
 
     private lateinit var credentialsProvider: CognitoCredentialsProvider
     private lateinit var pollyClient: AmazonPollyPresigningClient
@@ -109,10 +101,11 @@ class MainActivity : AppCompatActivity() {
         setContent {
             val clockState = state { SilicanDateTime.now }
             val awairDataState = state<AwairData?> { null }
-            val statisticsState = state<Statistic?> { null }
+            val statisticsState = state<DataDisplay?> { null }
             val statisticsTransitionState = state { "visible" }
             val graphState = state<List<Int>?> { null }
             val newsState = state<TickerTapeEntry?> { null }
+            val weatherState = state<DataDisplay?> { null }
 
             clockViewModel.currentDate.observe(this, Observer { newState ->
                 clockState.value = newState
@@ -138,6 +131,11 @@ class MainActivity : AppCompatActivity() {
             newsViewModel.entry.observe(this, Observer { entry ->
                 newsState.value = entry
             })
+
+            weatherViewModel.data.observe(this, Observer { data ->
+                weatherState.value = data
+            })
+            weatherViewModel.launch(volleyQueue)
 
             val opacity = FloatPropKey("Opacity")
             val fadeTransition = transitionDefinition {
@@ -181,7 +179,13 @@ class MainActivity : AppCompatActivity() {
                             modifier = Modifier.fillMaxSize().padding(10.dp),
                             gravity = Alignment.BottomStart
                         ) {
-                            ShelterInPlaceCounter()
+                            weatherState.value?.let {
+                                StatisticDisplay(
+                                    statistic = it,
+                                    onClick = {},
+                                    alignment = Alignment.Start
+                                )
+                            }
                         }
                         Transition(
                             definition = fadeTransition,
@@ -216,19 +220,6 @@ class MainActivity : AppCompatActivity() {
                 or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                 or View.SYSTEM_UI_FLAG_FULLSCREEN)
     }
-}
-
-@Composable
-fun ShelterInPlaceCounter() {
-    val dateState = state { LocalDate.now() }
-    val duration = Days.daysBetween(startOfShelterInPlace, dateState.value).days
-    StatisticDisplay(
-        statistic = Statistic(
-            duration.toString(),
-            null,
-            "days of shelter-in-place"
-        ), onClick = {}, alignment = Alignment.Start
-    )
 }
 
 @Composable

@@ -31,13 +31,13 @@ class StatisticsViewModel : ViewModel() {
             "{\"version\":\"1.0.0\",\"queries\":[{\"Query\":{\"Commands\":[{\"SemanticQueryDataShapeCommand\":{\"Query\":{\"Version\":2,\"From\":[{\"Name\":\"c\",\"Entity\":\"counts\",\"Type\":0}],\"Select\":[{\"Aggregation\":{\"Expression\":{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"New\"}},\"Function\":0},\"Name\":\"Sum(counts.New)\"}],\"Where\":[{\"Condition\":{\"In\":{\"Expressions\":[{\"Column\":{\"Expression\":{\"SourceRef\":{\"Source\":\"c\"}},\"Property\":\"Category\"}}],\"Values\":[[{\"Literal\":{\"Value\":\"'Cases'\"}}]]}}}]},\"Binding\":{\"Primary\":{\"Groupings\":[{\"Projections\":[0]}]},\"DataReduction\":{\"DataVolume\":3,\"Primary\":{\"Top\":{}}},\"Version\":1}}}]},\"CacheKey\":\"{\\\"Commands\\\":[{\\\"SemanticQueryDataShapeCommand\\\":{\\\"Query\\\":{\\\"Version\\\":2,\\\"From\\\":[{\\\"Name\\\":\\\"c\\\",\\\"Entity\\\":\\\"counts\\\",\\\"Type\\\":0}],\\\"Select\\\":[{\\\"Aggregation\\\":{\\\"Expression\\\":{\\\"Column\\\":{\\\"Expression\\\":{\\\"SourceRef\\\":{\\\"Source\\\":\\\"c\\\"}},\\\"Property\\\":\\\"New\\\"}},\\\"Function\\\":0},\\\"Name\\\":\\\"Sum(counts.New)\\\"}],\\\"Where\\\":[{\\\"Condition\\\":{\\\"In\\\":{\\\"Expressions\\\":[{\\\"Column\\\":{\\\"Expression\\\":{\\\"SourceRef\\\":{\\\"Source\\\":\\\"c\\\"}},\\\"Property\\\":\\\"Category\\\"}}],\\\"Values\\\":[[{\\\"Literal\\\":{\\\"Value\\\":\\\"'Cases'\\\"}}]]}}}]},\\\"Binding\\\":{\\\"Primary\\\":{\\\"Groupings\\\":[{\\\"Projections\\\":[0]}]},\\\"DataReduction\\\":{\\\"DataVolume\\\":3,\\\"Primary\\\":{\\\"Top\\\":{}}},\\\"Version\\\":1}}}]}\",\"QueryId\":\"\",\"ApplicationContext\":{\"DatasetId\":\"b9bd8aff-3939-4b9b-bb7f-b562bdc492ad\",\"Sources\":[{\"ReportId\":\"8c0bb640-6b65-4ea6-9146-39a7cbad0314\"}]}}],\"cancelQueries\":[],\"modelId\":344061}"
     }
 
-    val statistic = MutableLiveData<Statistic>()
+    val statistic = MutableLiveData<DataDisplay>()
     val graph = MutableLiveData<List<Int>>()
-    val cache = mutableMapOf<Int, Statistic>()
+    val cache = mutableMapOf<Int, DataDisplay>()
     private val statistics = listOf({
         val total = fetchData(CASES_PAYLOAD) ?: return@listOf null
         val new = fetchData(NEW_CASES_PAYLOAD) ?: return@listOf null
-        Statistic(
+        TextData(
             formatNumber(total),
             "(${formatNumber(new)} new)",
             "cases in Santa Clara (Santa Clara Public Health)"
@@ -45,7 +45,8 @@ class StatisticsViewModel : ViewModel() {
     }, {
         val data =
             fetch("https://data.sccgov.org/resource/59wk-iusg.json?city=Mountain View").let(::JSONArray)
-        Statistic(
+
+        TextData(
             data.getJSONObject(0).getString("cases"), "(${
             data.getJSONObject(0).getString("rate")
             }/100K)", "cases in Mountain View (Santa Clara Open Data Portal)"
@@ -55,7 +56,7 @@ class StatisticsViewModel : ViewModel() {
             fetch("https://data.covidactnow.org/latest/us/states/CA.OBSERVED_INTERVENTION.json").let(
                 ::JSONObject
             )
-        Statistic(
+        TextData(
             "%.3f".format(data.getJSONObject("projections").getDouble("Rt")),
             null,
             "California R-effective as of ${LocalDate.parse(data.getString("lastUpdatedDate"))
@@ -66,7 +67,7 @@ class StatisticsViewModel : ViewModel() {
             fetch("https://data.covidactnow.org/latest/us/counties/06085.OBSERVED_INTERVENTION.json").let(
                 ::JSONObject
             )
-        Statistic(
+        TextData(
             "%.3f".format(data.getJSONObject("projections").getDouble("Rt")),
             null,
             "Santa Clara R-effective as of ${LocalDate.parse(data.getString("lastUpdatedDate"))
@@ -77,7 +78,7 @@ class StatisticsViewModel : ViewModel() {
             fetch("https://covidtracking.com/api/v1/states/ca/current.json").let(::JSONObject)
         val total = data.getInt("positive").let(::formatNumber)
         val new = data.getInt("positiveIncrease").let(::formatNumber)
-        Statistic(
+        TextData(
             total,
             "($new new)",
             "cases in California as of ${data.getInt("date").let {
@@ -160,7 +161,5 @@ class StatisticsViewModel : ViewModel() {
     private fun formatNumber(it: Int) =
         if (it >= 10_000) "%,d".format(Locale.CANADA_FRENCH, it) else it.toString()
 }
-
-typealias StatisticSource = () -> Statistic?
 
 data class Statistic(val number: String, val subnumber: String?, val caption: String)
