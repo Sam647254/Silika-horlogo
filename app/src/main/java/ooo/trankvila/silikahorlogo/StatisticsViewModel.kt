@@ -20,6 +20,7 @@ import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.*
 import javax.net.ssl.HttpsURLConnection
+import kotlin.math.roundToInt
 
 class StatisticsViewModel : ViewModel() {
     private companion object {
@@ -48,7 +49,7 @@ class StatisticsViewModel : ViewModel() {
 
         TextData(
             data.getJSONObject(0).getString("cases"), "(${
-            data.getJSONObject(0).getString("rate")
+                data.getJSONObject(0).getString("rate")
             }/100K)", "cases in Mountain View (Santa Clara Open Data Portal)"
         )
     }, {
@@ -59,8 +60,10 @@ class StatisticsViewModel : ViewModel() {
         TextData(
             "%.3f".format(data.getJSONObject("projections").getDouble("Rt")),
             null,
-            "California R-effective as of ${LocalDate.parse(data.getString("lastUpdatedDate"))
-                .let { SilicanDate.fromGregorian(it) }.shortDate} (CovidActNow.org)"
+            "California R-effective as of ${
+                LocalDate.parse(data.getString("lastUpdatedDate"))
+                    .let { SilicanDate.fromGregorian(it) }.shortDate
+            } (CovidActNow.org)"
         )
     }, {
         val data =
@@ -70,8 +73,10 @@ class StatisticsViewModel : ViewModel() {
         TextData(
             "%.3f".format(data.getJSONObject("projections").getDouble("Rt")),
             null,
-            "Santa Clara R-effective as of ${LocalDate.parse(data.getString("lastUpdatedDate"))
-                .let(SilicanDate.Companion::fromGregorian).shortDate} (CovidActNow.org)"
+            "Santa Clara R-effective as of ${
+                LocalDate.parse(data.getString("lastUpdatedDate"))
+                    .let(SilicanDate.Companion::fromGregorian).shortDate
+            } (CovidActNow.org)"
         )
     }, {
         val data =
@@ -81,9 +86,11 @@ class StatisticsViewModel : ViewModel() {
         TextData(
             total,
             "($new new)",
-            "cases in California as of ${data.getInt("date").let {
-                LocalDate.parse(it.toString(), DateTimeFormat.forPattern("YYYYMMdd"))
-            }.let(SilicanDate.Companion::fromGregorian).shortDate} (The COVID Tracking Project)"
+            "cases in California as of ${
+                data.getInt("date").let {
+                    LocalDate.parse(it.toString(), DateTimeFormat.forPattern("YYYYMMdd"))
+                }.let(SilicanDate.Companion::fromGregorian).shortDate
+            } (The COVID Tracking Project)"
         )
     })
     private var statisticIndex = 0
@@ -159,7 +166,7 @@ class StatisticsViewModel : ViewModel() {
     }
 
     private fun formatNumber(it: Int) =
-        if (it >= 10_000) "%,d".format(Locale.CANADA_FRENCH, it) else it.toString()
+        if (it >= 100_000) "%dK".format((it / 1000.0).roundToInt())
+        else if (it >= 10_000) "%,d".format(Locale.CANADA_FRENCH, it)
+        else it.toString()
 }
-
-data class Statistic(val number: String, val subnumber: String?, val caption: String)
