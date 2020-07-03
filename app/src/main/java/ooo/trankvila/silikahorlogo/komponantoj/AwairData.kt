@@ -14,6 +14,7 @@ import androidx.ui.graphics.Color
 import androidx.ui.layout.*
 import androidx.ui.text.SpanStyle
 import androidx.ui.text.annotatedString
+import androidx.ui.unit.Dp
 import androidx.ui.unit.dp
 import androidx.ui.unit.sp
 import ooo.trankvila.silikahorlogo.AwairData
@@ -91,9 +92,9 @@ fun <T : Comparable<T>> AwairDataField(
 }
 
 @Composable
-fun AwairDataStrip(data: AwairData) {
+fun AwairDataStrip(data: AwairData, offset: Dp) {
     Row(
-        modifier = Modifier.padding(vertical = 10.dp).fillMaxWidth().offset(y = 40.dp),
+        modifier = Modifier.padding(vertical = 10.dp).fillMaxWidth().offset(y = offset),
         horizontalArrangement = Arrangement.Center
     ) {
         AwairDataField(

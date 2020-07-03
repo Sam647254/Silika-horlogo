@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ooo.trankvila.silikahorlogo.komponantoj.TickerTapeEntry
 import org.json.JSONObject
+import java.io.IOException
 import java.net.URI
 import java.net.URL
 import javax.net.ssl.HttpsURLConnection
@@ -19,16 +20,6 @@ import javax.net.ssl.HttpsURLConnection
 class NewsViewModel : ViewModel() {
     var synthesizeSpeech: ((String) -> Unit)? = null
     val entry = MutableLiveData<TickerTapeEntry>()
-    val entries = (0..10).map {
-        TickerTapeEntry("Ticker tape entry for $it") {
-            Log.d("NewsViewModel", "Ticker tape entry $it clicked")
-            viewModelScope.launch {
-                withContext(Dispatchers.IO) {
-                    synthesizeSpeech?.invoke("Ticker tape entry $it clicked")
-                }
-            }
-        }
-    }
 
     private var next = 0
 
@@ -56,7 +47,7 @@ class NewsViewModel : ViewModel() {
                             }
                         }
                     })
-                    next = (next + 1) % entries.size
+                    next = (next + 1) % news.size
                     handler.postDelayed(this, 15_000)
                 }
             }
@@ -68,8 +59,13 @@ class NewsViewModel : ViewModel() {
         (URL("https://api.breakingapi.com/news?q=coronavirus&type=headlines&locale=en-US&api_key=$BreakingApiKey")
             .openConnection() as? HttpsURLConnection)?.run {
             requestMethod = "GET"
-            inputStream.bufferedReader().use {
-                it.readText()
+            try {
+                inputStream.bufferedReader().use {
+                    it.readText()
+                }
+            } catch (e: IOException) {
+                Log.d("NewsViewModel", errorStream.bufferedReader().readText(), e)
+                return null
             }
         }
 

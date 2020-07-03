@@ -67,14 +67,15 @@ class MainActivity : AppCompatActivity() {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        credentialsProvider = CognitoCachingCredentialsProvider(
-            applicationContext,
-            CognitoIdentityPoolId,
-            Regions.US_WEST_2
-        )
-        pollyClient = AmazonPollyPresigningClient(credentialsProvider)
-
         newsViewModel.synthesizeSpeech = { text ->
+            if (!::credentialsProvider.isInitialized) {
+                credentialsProvider = CognitoCachingCredentialsProvider(
+                    applicationContext,
+                    CognitoIdentityPoolId,
+                    Regions.US_WEST_2
+                )
+                pollyClient = AmazonPollyPresigningClient(credentialsProvider)
+            }
             val request = SynthesizeSpeechPresignRequest().apply {
                 this.text = text
                 voiceId = "Emma"
@@ -167,7 +168,7 @@ class MainActivity : AppCompatActivity() {
                             Fonto(stats = it)
                         }
                         awairDataState.value?.let {
-                            AwairDataStrip(it)
+                            AwairDataStrip(it, if (newsState.value != null) 40.dp else 10.dp)
                         }
                         Clock(clockState.value)
                         Box(
