@@ -24,7 +24,7 @@ fun Clock(dateTime: LocalDateTime, onClick: () -> Unit, useSilican: Boolean) {
     val time = silican.time
     Row(
         modifier = Modifier.fillMaxSize()
-            .offset(y = if (useSilican) 190.dp else 220.dp).clickable(onClick = onClick),
+            .offset(y = if (useSilican) 180.dp else 220.dp).clickable(onClick = onClick),
         horizontalArrangement = Arrangement.Center
     ) {
         Column(horizontalGravity = Alignment.End) {
@@ -66,7 +66,7 @@ fun Clock(dateTime: LocalDateTime, onClick: () -> Unit, useSilican: Boolean) {
             fontSize = 240.sp,
             fontFamily = SairaSemibold,
             style = TimeShadow,
-            modifier = Modifier.offset(x = 10.dp, y = if (useSilican) (-50).dp else (-90).dp)
+            modifier = Modifier.offset(x = 10.dp, y = if (useSilican) (-40).dp else (-90).dp)
         )
     }
 }

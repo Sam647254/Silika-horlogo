@@ -134,6 +134,7 @@ class MainActivity : AppCompatActivity() {
             newsViewModel.entry.observe(this, Observer { entry ->
                 newsState.value = entry
             })
+            newsViewModel.launch(volleyQueue)
 
             weatherViewModel.data.observe(this, Observer { data ->
                 weatherTransitionState.value = "invisible"
