@@ -24,25 +24,27 @@ fun Clock(dateTime: LocalDateTime, onClick: () -> Unit, useSilican: Boolean) {
     val time = silican.time
     Row(
         modifier = Modifier.fillMaxSize()
-            .offset(y = 190.dp).clickable(onClick = onClick),
+            .offset(y = if (useSilican) 190.dp else 220.dp).clickable(onClick = onClick),
         horizontalArrangement = Arrangement.Center
     ) {
         Column(horizontalGravity = Alignment.End) {
+            if (useSilican) {
+                Text(
+                    if (useSilican) date.year.toString() else dateTime.year.toString(),
+                    fontSize = 36.sp,
+                    style = shadow,
+                    fontFamily = Saira
+                )
+            }
             Text(
-                if (useSilican) date.year.toString() else dateTime.year.toString(),
-                fontSize = 36.sp,
-                style = shadow,
-                fontFamily = Saira
-            )
-            Text(
-                if (useSilican) date.currentSeason else dateTime.toString("MMMM"),
+                if (useSilican) date.currentSeason else dateTime.year.toString(),
                 fontSize = 54.sp,
                 fontFamily = Saira,
                 style = shadow,
                 modifier = Modifier.offset(y = (-15).dp)
             )
             Text(
-                if (useSilican) date.currentWeek else dateTime.dayOfMonth.toString(),
+                if (useSilican) date.currentWeek else dateTime.toString("MMMM d"),
                 fontSize = 54.sp,
                 fontFamily = Saira,
                 style = shadow,
@@ -64,7 +66,7 @@ fun Clock(dateTime: LocalDateTime, onClick: () -> Unit, useSilican: Boolean) {
             fontSize = 240.sp,
             fontFamily = SairaSemibold,
             style = TimeShadow,
-            modifier = Modifier.offset(y = (-40).dp)
+            modifier = Modifier.offset(x = 10.dp, y = if (useSilican) (-50).dp else (-90).dp)
         )
     }
 }
