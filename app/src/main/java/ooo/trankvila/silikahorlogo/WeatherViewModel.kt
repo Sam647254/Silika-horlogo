@@ -17,7 +17,7 @@ private val startOfShelterInPlace = LocalDate(2020, 3, 3)
 class WeatherViewModel : ViewModel() {
     val data = MutableLiveData<DataDisplay?>(null)
     val requestUrl =
-        "https://api.openweathermap.org/data/2.5/weather?id=5375480&appid=${weatherApiKey}&units=metric"
+        "https://api.openweathermap.org/data/2.5/weather?id=6159905&appid=${weatherApiKey}&units=metric"
     var dataDisplays = listOf<DataDisplay>()
     private var next = 0
 

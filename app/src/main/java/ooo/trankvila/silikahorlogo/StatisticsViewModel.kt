@@ -54,39 +54,39 @@ class StatisticsViewModel : ViewModel() {
         )
     }, {
         val data =
-            fetch("https://data.covidactnow.org/latest/us/states/CA.OBSERVED_INTERVENTION.json").let(
+            fetch("https://data.covidactnow.org/latest/us/states/WA.OBSERVED_INTERVENTION.json").let(
                 ::JSONObject
             )
         TextData(
             "%.3f".format(data.getJSONObject("projections").getDouble("Rt")),
             null,
-            "California R-effective as of ${
+            "Washington R-effective as of ${
                 LocalDate.parse(data.getString("lastUpdatedDate"))
                     .let { SilicanDate.fromGregorian(it) }.shortDate
             } (CovidActNow.org)"
         )
     }, {
         val data =
-            fetch("https://data.covidactnow.org/latest/us/counties/06085.OBSERVED_INTERVENTION.json").let(
+            fetch("https://data.covidactnow.org/latest/us/counties/53033.OBSERVED_INTERVENTION.json").let(
                 ::JSONObject
             )
         TextData(
             "%.3f".format(data.getJSONObject("projections").getDouble("Rt")),
             null,
-            "Santa Clara R-effective as of ${
+            "King County R-effective as of ${
                 LocalDate.parse(data.getString("lastUpdatedDate"))
                     .let(SilicanDate.Companion::fromGregorian).shortDate
             } (CovidActNow.org)"
         )
     }, {
         val data =
-            fetch("https://covidtracking.com/api/v1/states/ca/current.json").let(::JSONObject)
+            fetch("https://covidtracking.com/api/v1/states/wa/current.json").let(::JSONObject)
         val total = data.getInt("positive").let(::formatNumber)
         val new = data.getInt("positiveIncrease").let(::formatNumber)
         TextData(
             total,
             "($new new)",
-            "cases in California as of ${
+            "cases in Washington as of ${
                 data.getInt("date").let {
                     LocalDate.parse(it.toString(), DateTimeFormat.forPattern("YYYYMMdd"))
                 }.let(SilicanDate.Companion::fromGregorian).shortDate
@@ -134,9 +134,11 @@ class StatisticsViewModel : ViewModel() {
         }
 
     private fun fetchGraph() =
-        fetch("https://data.sccgov.org/resource/6cnm-gchg.json").let(::JSONArray).let {
-            (it.length() - 1 downTo 0).map { i ->
-                it.getJSONObject(i).getString("new_cases").toInt()
+        fetch("https://api.covid19tracker.ca/reports/province/bc?fill_dates&stat=cases").let(::JSONObject).let {
+            it.getJSONArray("data").let { data ->
+                (data.length() - 1 downTo 0).map { i ->
+                    data.getJSONObject(i).optInt("change_cases", 0)
+                }
             }
         }
 
