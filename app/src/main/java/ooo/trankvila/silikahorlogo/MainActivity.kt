@@ -26,9 +26,7 @@ import androidx.ui.foundation.Image
 import androidx.ui.graphics.Color
 import androidx.ui.graphics.ColorFilter
 import androidx.ui.graphics.imageFromResource
-import androidx.ui.layout.Stack
-import androidx.ui.layout.fillMaxSize
-import androidx.ui.layout.padding
+import androidx.ui.layout.*
 import androidx.ui.material.Surface
 import androidx.ui.unit.dp
 import com.amazonaws.auth.CognitoCachingCredentialsProvider
@@ -183,13 +181,15 @@ class MainActivity : AppCompatActivity() {
                         awairDataState.value?.let {
                             AwairDataStrip(it, if (newsState.value != null) 40.dp else 10.dp)
                         }
-                        Clock(clockState.value, onClick = {
-                            val prev = preferences.getBoolean("useSilican", false)
-                            preferences.edit {
-                                putBoolean("useSilican", !prev)
-                                clockFormatState.value = !prev
-                            }
-                        }, useSilican = clockFormatState.value)
+                        Box(modifier = Modifier.offset(y = if (awairDataState.value == null) (-20).dp else 0.dp)) {
+                            Clock(clockState.value, onClick = {
+                                val prev = preferences.getBoolean("useSilican", false)
+                                preferences.edit {
+                                    putBoolean("useSilican", !prev)
+                                    clockFormatState.value = !prev
+                                }
+                            }, useSilican = clockFormatState.value)
+                        }
                         Transition(
                             definition = fadeTransition, toState =
                             weatherTransitionState.value
