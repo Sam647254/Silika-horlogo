@@ -23,7 +23,7 @@ fun Clock(dateTime: LocalDateTime, onClick: () -> Unit, useSilican: Boolean) {
     val date = silican.date
     val time = silican.time
     Row(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxWidth()
             .offset(y = if (useSilican) 180.dp else 220.dp).clickable(onClick = onClick),
         horizontalArrangement = Arrangement.Center
     ) {
@@ -44,7 +44,7 @@ fun Clock(dateTime: LocalDateTime, onClick: () -> Unit, useSilican: Boolean) {
                 modifier = Modifier.offset(y = (-15).dp)
             )
             Text(
-                if (useSilican) date.currentWeek else dateTime.toString("MMMM d"),
+                if (useSilican) date.currentWeek else dateTime.toString("MMM d"),
                 fontSize = 54.sp,
                 fontFamily = Saira,
                 style = shadow,
