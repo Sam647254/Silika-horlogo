@@ -34,7 +34,7 @@ class StatisticsViewModel : ViewModel() {
             province.getString("province") == "BC"
         }.let { data.getJSONObject(it) }
         val total = bcData.getInt("total_cases")
-        val new = bcData.getInt("change_cases")
+        val new = bcData.optInt("change_cases", 0)
         TextData(
             formatNumber(total),
             "(${formatNumber(new)} new)",
