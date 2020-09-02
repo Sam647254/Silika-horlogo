@@ -2,22 +2,16 @@ package ooo.trankvila.silikahorlogo
 
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.joda.time.LocalDate
 import org.joda.time.format.DateTimeFormat
-import org.joda.time.format.DateTimeFormatter
-import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URL
-import java.text.DecimalFormat
-import java.text.DecimalFormatSymbols
 import java.util.*
 import javax.net.ssl.HttpsURLConnection
 import kotlin.math.roundToInt
@@ -45,28 +39,28 @@ class StatisticsViewModel : ViewModel() {
         )
     }, {
         val data =
-            fetch("https://data.covidactnow.org/latest/us/states/WA.OBSERVED_INTERVENTION.json").let(
+            fetch("https://api.covidactnow.org/v2/state/WA.json?apiKey=${CovidActNowKey}").let(
                 ::JSONObject
             )
         TextData(
-            "%.3f".format(data.getJSONObject("projections").getDouble("Rt")),
+            data.getJSONObject("metrics").getDouble("infectionRate").let { "%.3f".format(it) },
             null,
             "Washington R-effective as of ${
-            LocalDate.parse(data.getString("lastUpdatedDate"))
-                .let { SilicanDate.fromGregorian(it) }.shortDate
+                LocalDate.parse(data.getString("lastUpdatedDate"))
+                    .let { SilicanDate.fromGregorian(it) }.shortDate
             } (CovidActNow.org)"
         )
     }, {
         val data =
-            fetch("https://data.covidactnow.org/latest/us/counties/53033.OBSERVED_INTERVENTION.json").let(
+            fetch("https://api.covidactnow.org/v2/county/53033.json?apiKey=${CovidActNowKey}").let(
                 ::JSONObject
             )
         TextData(
-            "%.3f".format(data.getJSONObject("projections").getDouble("Rt")),
+            data.getJSONObject("metrics").getDouble("infectionRate").let { "%.3f".format(it) },
             null,
             "King County R-effective as of ${
-            LocalDate.parse(data.getString("lastUpdatedDate"))
-                .let(SilicanDate.Companion::fromGregorian).shortDate
+                LocalDate.parse(data.getString("lastUpdatedDate"))
+                    .let(SilicanDate.Companion::fromGregorian).shortDate
             } (CovidActNow.org)"
         )
     }, {
@@ -78,9 +72,9 @@ class StatisticsViewModel : ViewModel() {
             total,
             "($new new)",
             "cases in Washington as of ${
-            data.getInt("date").let {
-                LocalDate.parse(it.toString(), DateTimeFormat.forPattern("YYYYMMdd"))
-            }.let(SilicanDate.Companion::fromGregorian).shortDate
+                data.getInt("date").let {
+                    LocalDate.parse(it.toString(), DateTimeFormat.forPattern("YYYYMMdd"))
+                }.let(SilicanDate.Companion::fromGregorian).shortDate
             } (The COVID Tracking Project)"
         )
     })
