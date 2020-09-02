@@ -1,6 +1,6 @@
 package ooo.trankvila.silikahorlogo.ui
 
-import androidx.ui.graphics.Color
+import androidx.compose.ui.graphics.Color
 import ooo.trankvila.silikahorlogo.R
 
 val purple200 = Color(0xFFBB86FC)

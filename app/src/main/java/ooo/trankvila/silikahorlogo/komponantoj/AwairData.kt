@@ -1,22 +1,20 @@
 package ooo.trankvila.silikahorlogo.komponantoj
 
-import androidx.animation.FastOutLinearInEasing
-import androidx.animation.FloatPropKey
-import androidx.animation.Infinite
-import androidx.animation.transitionDefinition
-import androidx.compose.Composable
-import androidx.ui.animation.Transition
-import androidx.ui.core.Alignment
-import androidx.ui.core.Modifier
-import androidx.ui.core.drawOpacity
-import androidx.ui.foundation.Text
-import androidx.ui.graphics.Color
-import androidx.ui.layout.*
-import androidx.ui.text.SpanStyle
-import androidx.ui.text.annotatedString
-import androidx.ui.unit.Dp
-import androidx.ui.unit.dp
-import androidx.ui.unit.sp
+import androidx.compose.animation.Transition
+import androidx.compose.animation.core.*
+import androidx.compose.animation.core.AnimationConstants.Infinite
+import androidx.compose.foundation.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawOpacity
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.annotatedString
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import ooo.trankvila.silikahorlogo.AwairData
 import ooo.trankvila.silikahorlogo.ui.*
 
@@ -34,7 +32,7 @@ fun <T : Comparable<T>> AwairDataField(
         else -> if (value > warning1Range.endInclusive) warning4 else warning2
     }
     val opacity = FloatPropKey("opacity")
-    val pulse = transitionDefinition {
+    val pulse = transitionDefinition<String> {
         state("start") {
             this[opacity] = 1F
         }
@@ -42,13 +40,7 @@ fun <T : Comparable<T>> AwairDataField(
             this[opacity] = 0.4F
         }
         transition("start", "end") {
-            opacity using repeatable {
-                animation = tween {
-                    duration = 1500
-                    easing = FastOutLinearInEasing
-                }
-                iterations = Infinite
-            }
+            opacity using repeatable(Infinite, tween(1500, easing = FastOutLinearInEasing))
         }
     }
     Transition(
@@ -57,7 +49,7 @@ fun <T : Comparable<T>> AwairDataField(
         initState = "start"
     ) { state ->
         Column(
-            horizontalGravity = Alignment.CenterHorizontally, modifier =
+            horizontalAlignment = Alignment.CenterHorizontally, modifier =
             Modifier.drawOpacity(state[opacity])
         ) {
             Text(

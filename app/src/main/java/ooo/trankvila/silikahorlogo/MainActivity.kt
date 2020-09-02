@@ -10,25 +10,24 @@ import android.view.View
 import android.view.Window
 import android.view.WindowManager
 import androidx.activity.viewModels
-import androidx.animation.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.Composable
-import androidx.compose.state
+import androidx.compose.animation.Transition
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.Surface
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.state
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawOpacity
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.imageFromResource
+import androidx.compose.ui.platform.setContent
+import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import androidx.lifecycle.Observer
-import androidx.ui.animation.Transition
-import androidx.ui.core.Alignment
-import androidx.ui.core.Modifier
-import androidx.ui.core.drawOpacity
-import androidx.ui.core.setContent
-import androidx.ui.foundation.Box
-import androidx.ui.foundation.Image
-import androidx.ui.graphics.Color
-import androidx.ui.graphics.ColorFilter
-import androidx.ui.graphics.imageFromResource
-import androidx.ui.layout.*
-import androidx.ui.material.Surface
-import androidx.ui.unit.dp
 import com.amazonaws.auth.CognitoCachingCredentialsProvider
 import com.amazonaws.auth.CognitoCredentialsProvider
 import com.amazonaws.regions.Regions
@@ -144,7 +143,7 @@ class MainActivity : AppCompatActivity() {
             weatherViewModel.launch(volleyQueue)
 
             val opacity = FloatPropKey("Opacity")
-            val fadeTransition = transitionDefinition {
+            val fadeTransition = transitionDefinition<String> {
                 state("visible") {
                     this[opacity] = 1.0F
                 }
@@ -153,17 +152,11 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 transition("visible" to "invisible") {
-                    opacity using tween {
-                        duration = 500
-                        easing = FastOutLinearInEasing
-                    }
+                    opacity using tween(500, easing = FastOutLinearInEasing)
                 }
 
                 transition("invisible" to "visible") {
-                    opacity using tween {
-                        duration = 500
-                        easing = FastOutSlowInEasing
-                    }
+                    opacity using tween(500, easing = FastOutSlowInEasing)
                 }
             }
 
@@ -197,7 +190,7 @@ class MainActivity : AppCompatActivity() {
                             Box(
                                 modifier = Modifier.fillMaxSize().padding(10.dp)
                                     .drawOpacity(it[opacity]),
-                                gravity = Alignment.BottomStart
+                                alignment = Alignment.BottomStart
                             ) {
                                 weatherState.value?.let {
                                     StatisticDisplay(
@@ -215,7 +208,7 @@ class MainActivity : AppCompatActivity() {
                             Box(
                                 modifier = Modifier.fillMaxSize().padding(10.dp)
                                     .drawOpacity(state[opacity]),
-                                gravity = Alignment.BottomEnd
+                                alignment = Alignment.BottomEnd
                             ) {
                                 statisticsState.value?.let {
                                     StatisticDisplay(

@@ -1,22 +1,16 @@
 package ooo.trankvila.silikahorlogo.komponantoj
 
-import androidx.animation.FloatPropKey
-import androidx.animation.transitionDefinition
-import androidx.compose.Composable
-import androidx.compose.state
-import androidx.ui.core.Alignment
-import androidx.ui.core.Modifier
-import androidx.ui.core.drawLayer
-import androidx.ui.foundation.Box
-import androidx.ui.foundation.Text
-import androidx.ui.foundation.clickable
-import androidx.ui.layout.*
-import androidx.ui.text.SpanStyle
-import androidx.ui.text.TextLayoutResult
-import androidx.ui.text.annotatedString
-import androidx.ui.unit.IntPx
-import androidx.ui.unit.dp
-import androidx.ui.unit.sp
+import androidx.compose.foundation.Text
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.offset
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.annotatedString
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import ooo.trankvila.silikahorlogo.*
 import ooo.trankvila.silikahorlogo.ui.Saira
 import ooo.trankvila.silikahorlogo.ui.phases
@@ -28,7 +22,7 @@ fun StatisticDisplay(
     onClick: () -> Unit,
     alignment: Alignment.Horizontal
 ) {
-    Column(modifier = Modifier.clickable(onClick = onClick), horizontalGravity = alignment) {
+    Column(modifier = Modifier.clickable(onClick = onClick), horizontalAlignment = alignment) {
         when (statistic) {
             is TextData -> {
                 Text(

@@ -1,13 +1,12 @@
 package ooo.trankvila.silikahorlogo.komponantoj
 
-import androidx.compose.Composable
-import androidx.compose.remember
-import androidx.ui.core.Modifier
-import androidx.ui.foundation.Canvas
-import androidx.ui.geometry.Offset
-import androidx.ui.geometry.Size
-import androidx.ui.graphics.Color
-import androidx.ui.layout.fillMaxSize
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 
 private val gap = 3
 private val barWidth = 10F

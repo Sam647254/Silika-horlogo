@@ -5,16 +5,9 @@ import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.StringRequest
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
-import javax.net.ssl.HttpsURLConnection
 
 class AwairViewModel: ViewModel() {
     val data = MutableLiveData<AwairData?>(null)
@@ -23,7 +16,7 @@ class AwairViewModel: ViewModel() {
         val handler = Handler(Looper.getMainLooper())
         val awairUpdater = object : Runnable {
             override fun run() {
-                requestQueue.add(StringRequest("http://192.168.1.127/air-data/latest", {
+                requestQueue.add(StringRequest("http://192.168.86.27/air-data/latest", {
                     JSONObject(it).let { response ->
                         AwairData(
                             response.getInt("score"),

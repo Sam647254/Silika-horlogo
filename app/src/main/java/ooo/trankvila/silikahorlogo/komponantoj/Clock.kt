@@ -1,14 +1,13 @@
 package ooo.trankvila.silikahorlogo.komponantoj
 
-import androidx.compose.Composable
-import androidx.ui.core.Alignment
-import androidx.ui.core.ContextAmbient
-import androidx.ui.core.Modifier
-import androidx.ui.foundation.Text
-import androidx.ui.foundation.clickable
-import androidx.ui.layout.*
-import androidx.ui.unit.dp
-import androidx.ui.unit.sp
+import androidx.compose.foundation.Text
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import ooo.trankvila.silikahorlogo.SilicanDateTime
 import ooo.trankvila.silikahorlogo.ui.Saira
 import ooo.trankvila.silikahorlogo.ui.SairaSemibold
@@ -27,7 +26,7 @@ fun Clock(dateTime: LocalDateTime, onClick: () -> Unit, useSilican: Boolean) {
             .offset(y = if (useSilican) 180.dp else 220.dp).clickable(onClick = onClick),
         horizontalArrangement = Arrangement.Center
     ) {
-        Column(horizontalGravity = Alignment.End) {
+        Column(horizontalAlignment = Alignment.End) {
             if (useSilican) {
                 Text(
                     if (useSilican) date.year.toString() else dateTime.year.toString(),
