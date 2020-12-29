@@ -2,18 +2,10 @@ package ooo.trankvila.silikahorlogo
 
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.joda.time.*
-import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
-import javax.net.ssl.HttpsURLConnection
+import java.lang.Double.min
 
 internal val syncPoint = LocalDate(2018, 1, 1)
 internal const val syncDayNumber = 12017 * 364 + 7 * ((12017 / 5) - (12017 / 40) + (12017 / 400))
@@ -92,17 +84,17 @@ data class SilicanDate(val year: Int, val season: Int, val week: Int, val weekda
             val remain5 = remain40 % daysIn5Years
             val remainingYears = remain5 / 364
             val remainingDays = remain5 % 364
-            val year = years400 * 400 + years40 * 40 + years5 * 5 + Math.min(remainingYears, 5)
-            val dayOfYear = if (remainingYears == 6) 364 + remainingDays else remainingDays
+            val year = years400 * 400 + years40 * 40 + years5 * 5 + Math.min(remainingYears, 4)
+            val dayOfYear = if (remainingYears == 5) 364 + remainingDays else remainingDays
             val season = if (dayOfYear > 364) 4 else dayOfYear / (364 / 4) + 1
             val dayOfSeason =
-                if (dayOfYear > 364) 364 / 4 + dayOfYear % (364 / 4) else dayOfYear % (364 / 4)
+                if (dayOfYear >= 364) 364 / 4 + dayOfYear % (364 / 4) else dayOfYear % (364 / 4)
             val weekOfSeason = dayOfSeason / 7 + 1
             val dayOfWeek = dayOfYear % 7 + 1
             val day = (dayOfYear % 28) + 1
             return SilicanDate(
                 year + 1,
-                season,
+                min(4.0, season.toDouble()).toInt(),
                 weekOfSeason,
                 dayOfWeek
             )
