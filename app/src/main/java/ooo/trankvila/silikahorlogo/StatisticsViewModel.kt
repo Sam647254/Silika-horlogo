@@ -19,7 +19,10 @@ import kotlin.math.roundToInt
 class StatisticsViewModel : ViewModel() {
     val statistic = MutableLiveData<DataDisplay>()
     val graph = MutableLiveData<List<Int>>()
+    val graph2 = MutableLiveData<List<Int>>()
     val cache = mutableMapOf<Int, DataDisplay>()
+    private val responseCache = mutableMapOf<String, String>()
+
     private val statistics = listOf({
         val data = fetch("https://api.covid19tracker.ca/summary/split").let(::JSONObject)
             .getJSONArray("data")
@@ -38,6 +41,25 @@ class StatisticsViewModel : ViewModel() {
             } (COVID-19 Tracker Canada)"
         )
     }, {
+        val data = fetch("https://api.covid19tracker.ca/summary/split").let(::JSONObject)
+            .getJSONArray("data")
+        val bcData = (0 until data.length()).first { i ->
+            val province = data.getJSONObject(i)
+            province.getString("province") == "BC"
+        }.let { data.getJSONObject(it) }
+        val population = 5110917
+        val total = bcData.getInt("total_vaccinations")
+        val twice = bcData.getInt("total_vaccinated")
+        val net = total - twice
+        TextData(
+            formatNumber(net),
+            "(%.2f%%)".format(net * 100.0 / population),
+            "Vaccinated population in BC as of ${
+                LocalDate.parse(bcData.getString("date"))
+                    .let(SilicanDate.Companion::fromGregorian).shortDate
+            } (COVID-19 Tracker Canada)"
+        )
+    }, {
         val data =
             fetch("https://api.covidactnow.org/v2/state/WA.json?apiKey=${CovidActNowKey}").let(
                 ::JSONObject
@@ -46,6 +68,21 @@ class StatisticsViewModel : ViewModel() {
             data.getJSONObject("metrics").getDouble("infectionRate").let { "%.3f".format(it) },
             null,
             "Washington R-effective as of ${
+                LocalDate.parse(data.getString("lastUpdatedDate"))
+                    .let { SilicanDate.fromGregorian(it) }.shortDate
+            } (CovidActNow.org)"
+        )
+    }, {
+        val data =
+            fetch("https://api.covidactnow.org/v2/state/WA.json?apiKey=${CovidActNowKey}").let(
+                ::JSONObject
+            )
+        val count = data.getJSONObject("actuals").getInt("vaccinationsInitiated")
+        val ratio = data.getJSONObject("metrics").getDouble("vaccinationsInitiatedRatio")
+        TextData(
+            formatNumber(count),
+            "(%.2f%%)".format(ratio * 100),
+            "Washington vaccinated population as of ${
                 LocalDate.parse(data.getString("lastUpdatedDate"))
                     .let { SilicanDate.fromGregorian(it) }.shortDate
             } (CovidActNow.org)"
@@ -106,19 +143,25 @@ class StatisticsViewModel : ViewModel() {
 
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                fetchGraph().let(graph::postValue)
+                fetchGraph()
             }
         }
     }
 
-    private fun fetch(url: String) =
-        (URL(url).openConnection() as? HttpsURLConnection)?.run {
+    fun refresh() {
+        cache.clear()
+        responseCache.clear()
+    }
+
+    private fun fetch(url: String) = responseCache.computeIfAbsent(url) {
+        (URL(url).openConnection() as HttpsURLConnection).run {
             requestMethod = "GET"
             addRequestProperty("X-App-Token", SocrataAppToken)
             inputStream.bufferedReader().readText()
         }
+    }
 
-    private fun fetchGraph() =
+    private fun fetchGraph() {
         fetch("https://api.covid19tracker.ca/reports/province/bc?fill_dates&stat=cases").let(::JSONObject)
             .let {
                 it.getJSONArray("data").let { data ->
@@ -126,10 +169,21 @@ class StatisticsViewModel : ViewModel() {
                         data.getJSONObject(i).optInt("change_cases", 0)
                     }
                 }
-            }
+            }.let(graph::postValue)
+        fetch("https://api.covid19tracker.ca/reports/province/bc?fill_dates&stat=vaccinations").let(::JSONObject)
+            .let {
+                it.getJSONArray("data").let { data ->
+                    (data.length() - 1 downTo 0).map { i ->
+                        data.getJSONObject(i).optInt("change_vaccinations", 0)
+                    }
+                }
+            }.let(graph2::postValue)
+    }
 
     private fun formatNumber(it: Int) =
-        if (it >= 100_000) "%dK".format((it / 1000.0).roundToInt())
-        else if (it >= 10_000) "%,d".format(Locale.CANADA_FRENCH, it)
-        else it.toString()
+        when {
+            it >= 100_000 -> "%dK".format((it / 1000.0).roundToInt())
+            it >= 10_000 -> "%,d".format(Locale.CANADA_FRENCH, it)
+            else -> it.toString()
+        }
 }

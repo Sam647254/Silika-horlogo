@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.Transition
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
@@ -42,6 +43,7 @@ import ooo.trankvila.silikahorlogo.ui.SilikaHorloĝoTheme
 import ooo.trankvila.silikahorlogo.ui.phaseColours
 import ooo.trankvila.silikahorlogo.ui.weekdayColours
 import org.joda.time.LocalDateTime
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
     private val clockViewModel: ClockViewModel by viewModels()
@@ -103,6 +105,7 @@ class MainActivity : AppCompatActivity() {
             val statisticsTransitionState = state { "visible" }
             val weatherTransitionState = state { "visible" }
             val graphState = state<List<Int>?> { null }
+            val graph2State = state<List<Int>?> { null }
             val newsState = state<TickerTapeEntry?> { null }
             val weatherState = state<DataDisplay?> { null }
             val clockFormatState = state { preferences.getBoolean("useSilican", false) }
@@ -126,6 +129,9 @@ class MainActivity : AppCompatActivity() {
 
             statisticsViewModel.graph.observe(this, Observer { data ->
                 graphState.value = data
+            })
+            statisticsViewModel.graph2.observe(this, Observer { data ->
+                graph2State.value = data
             })
 
             newsViewModel.entry.observe(this, Observer { entry ->
@@ -169,7 +175,7 @@ class MainActivity : AppCompatActivity() {
                             TickerTape(entry = it)
                         }
                         graphState.value?.let {
-                            Fonto(stats = it)
+                            Fonto(stats = it, stats2 = graph2State.value)
                         }
                         awairDataState.value?.let {
                             AwairDataStrip(it, if (newsState.value != null) 40.dp else 10.dp)
@@ -207,7 +213,9 @@ class MainActivity : AppCompatActivity() {
                         ) { state ->
                             Box(
                                 modifier = Modifier.fillMaxSize().padding(10.dp)
-                                    .drawOpacity(state[opacity]),
+                                    .drawOpacity(state[opacity]).clickable(onClick = {
+                                        statisticsViewModel.refresh()
+                                    }),
                                 alignment = Alignment.BottomEnd
                             ) {
                                 statisticsState.value?.let {
