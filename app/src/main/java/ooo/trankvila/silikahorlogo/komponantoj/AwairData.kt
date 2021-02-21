@@ -1,17 +1,16 @@
 package ooo.trankvila.silikahorlogo.komponantoj
 
-import androidx.compose.animation.Transition
 import androidx.compose.animation.core.*
-import androidx.compose.animation.core.AnimationConstants.Infinite
-import androidx.compose.foundation.Text
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawOpacity
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.annotatedString
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,54 +30,42 @@ fun <T : Comparable<T>> AwairDataField(
         in warning1Range -> if (value > normalRange.endInclusive) warning3 else warning1
         else -> if (value > warning1Range.endInclusive) warning4 else warning2
     }
-    val opacity = FloatPropKey("opacity")
-    val pulse = transitionDefinition<String> {
-        state("start") {
-            this[opacity] = 1F
-        }
-        state("end") {
-            this[opacity] = 0.4F
-        }
-        transition("start", "end") {
-            opacity using repeatable(Infinite, tween(1500, easing = FastOutLinearInEasing))
-        }
-    }
-    Transition(
-        definition = pulse,
-        toState = if (value in warning1Range) "start" else "end",
-        initState = "start"
-    ) { state ->
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally, modifier =
-            Modifier.drawOpacity(state[opacity])
-        ) {
-            Text(
-                annotatedString {
-                    pushStyle(SpanStyle(fontSize = 50.sp))
-                    append(if (value is Int) value.toString() else "%.1f".format(value))
-                    if (unit.isNotEmpty()) {
-                        pop()
-                        pushStyle(SpanStyle(fontSize = 25.sp))
-                        append(' ')
-                        append(unit)
-                    }
-                },
-                fontFamily = Saira,
-                style = shadow,
-                modifier = Modifier.padding(horizontal = 15.dp),
-                maxLines = 1,
-                softWrap = false,
-                color = color
-            )
-            Text(
-                label,
-                fontSize = 20.sp,
-                fontFamily = Saira,
-                style = shadow,
-                modifier = Modifier.offset(y = (-10).dp),
-                color = color
-            )
-        }
+    val infiniteTransition = rememberInfiniteTransition()
+    val pulse by infiniteTransition.animateFloat(
+        initialValue = 1F,
+        targetValue = 0.4F,
+        animationSpec = infiniteRepeatable(animation = tween(1000), repeatMode = RepeatMode.Restart)
+    )
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.alpha(if (value !in warning1Range) pulse else 1F)
+    ) {
+        Text(
+            buildAnnotatedString {
+                pushStyle(SpanStyle(fontSize = 50.sp))
+                append(if (value is Int) value.toString() else "%.1f".format(value))
+                if (unit.isNotEmpty()) {
+                    pop()
+                    pushStyle(SpanStyle(fontSize = 25.sp))
+                    append(' ')
+                    append(unit)
+                }
+            },
+            fontFamily = Saira,
+            style = shadow,
+            modifier = Modifier.padding(horizontal = 15.dp),
+            maxLines = 1,
+            softWrap = false,
+            color = color
+        )
+        Text(
+            label,
+            fontSize = 20.sp,
+            fontFamily = Saira,
+            style = shadow,
+            modifier = Modifier.offset(y = (-10).dp),
+            color = color
+        )
     }
 
 }
@@ -86,7 +73,10 @@ fun <T : Comparable<T>> AwairDataField(
 @Composable
 fun AwairDataStrip(data: AwairData, offset: Dp) {
     Row(
-        modifier = Modifier.padding(vertical = 10.dp).fillMaxWidth().offset(y = offset),
+        modifier = Modifier
+            .padding(vertical = 10.dp)
+            .fillMaxWidth()
+            .offset(y = offset),
         horizontalArrangement = Arrangement.Center
     ) {
         AwairDataField(

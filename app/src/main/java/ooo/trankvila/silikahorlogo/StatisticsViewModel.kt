@@ -31,10 +31,10 @@ class StatisticsViewModel : ViewModel() {
             province.getString("province") == "BC"
         }.let { data.getJSONObject(it) }
         val total = bcData.getInt("total_cases")
-        val new = bcData.optInt("change_cases", 0)
+        val new = bcData.optInt("change_cases")
         TextData(
             formatNumber(total),
-            "(${formatNumber(new)} new)",
+            if (new != 0) "(${formatNumber(new)} new)" else null,
             "cases in BC as of ${
                 LocalDate.parse(bcData.getString("date"))
                     .let(SilicanDate.Companion::fromGregorian).shortDate
@@ -104,10 +104,11 @@ class StatisticsViewModel : ViewModel() {
         val data =
             fetch("https://covidtracking.com/api/v1/states/wa/current.json").let(::JSONObject)
         val total = data.getInt("positive").let(::formatNumber)
-        val new = data.getInt("positiveIncrease").let(::formatNumber)
+        val new =
+            data.getInt("positiveIncrease").let { if (it > 0) it else null }?.let(::formatNumber)
         TextData(
             total,
-            "($new new)",
+            if (new != null) "($new new)" else null,
             "cases in Washington as of ${
                 data.getInt("date").let {
                     LocalDate.parse(it.toString(), DateTimeFormat.forPattern("YYYYMMdd"))
@@ -170,7 +171,9 @@ class StatisticsViewModel : ViewModel() {
                     }
                 }
             }.let(graph::postValue)
-        fetch("https://api.covid19tracker.ca/reports/province/bc?fill_dates&stat=vaccinations").let(::JSONObject)
+        fetch("https://api.covid19tracker.ca/reports/province/bc?fill_dates&stat=vaccinations").let(
+            ::JSONObject
+        )
             .let {
                 it.getJSONArray("data").let { data ->
                     (data.length() - 1 downTo 0).map { i ->

@@ -11,24 +11,26 @@ import android.view.Window
 import android.view.WindowManager
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.animation.Transition
-import androidx.compose.animation.core.*
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.state
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawOpacity
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.imageFromResource
 import androidx.compose.ui.platform.setContent
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
-import androidx.lifecycle.Observer
 import com.amazonaws.auth.CognitoCachingCredentialsProvider
 import com.amazonaws.auth.CognitoCredentialsProvider
 import com.amazonaws.regions.Regions
@@ -38,12 +40,14 @@ import com.amazonaws.services.polly.model.OutputFormat
 import com.amazonaws.services.polly.model.SynthesizeSpeechPresignRequest
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.Volley
-import ooo.trankvila.silikahorlogo.komponantoj.*
+import ooo.trankvila.silikahorlogo.komponantoj.AwairDataStrip
+import ooo.trankvila.silikahorlogo.komponantoj.Clock
+import ooo.trankvila.silikahorlogo.komponantoj.Fonto
+import ooo.trankvila.silikahorlogo.komponantoj.StatisticDisplay
 import ooo.trankvila.silikahorlogo.ui.SilikaHorloĝoTheme
 import ooo.trankvila.silikahorlogo.ui.phaseColours
 import ooo.trankvila.silikahorlogo.ui.weekdayColours
 import org.joda.time.LocalDateTime
-import java.util.*
 
 class MainActivity : AppCompatActivity() {
     private val clockViewModel: ClockViewModel by viewModels()
@@ -99,132 +103,70 @@ class MainActivity : AppCompatActivity() {
         val preferences = getPreferences(MODE_PRIVATE)
 
         setContent {
-            val clockState = state { LocalDateTime.now() }
-            val awairDataState = state<AwairData?> { null }
-            val statisticsState = state<DataDisplay?> { null }
-            val statisticsTransitionState = state { "visible" }
-            val weatherTransitionState = state { "visible" }
-            val graphState = state<List<Int>?> { null }
-            val graph2State = state<List<Int>?> { null }
-            val newsState = state<TickerTapeEntry?> { null }
-            val weatherState = state<DataDisplay?> { null }
-            val clockFormatState = state { preferences.getBoolean("useSilican", false) }
+            val clockFormatState =
+                remember { mutableStateOf(preferences.getBoolean("useSilican", false)) }
 
-            clockViewModel.currentDate.observe(this, Observer { newState ->
-                clockState.value = newState
-            })
+            val clockState: LocalDateTime by clockViewModel.currentDate.observeAsState(LocalDateTime.now())
+            val awairDataState: AwairData? by awairViewModel.data.observeAsState()
+            val statisticsState: DataDisplay? by statisticsViewModel.statistic.observeAsState()
+            val graphState: List<Int>? by statisticsViewModel.graph.observeAsState()
+            val graph2State: List<Int>? by statisticsViewModel.graph2.observeAsState()
+            val weatherState: DataDisplay? by weatherViewModel.data.observeAsState()
 
             awairViewModel.launch(volleyQueue)
-            awairViewModel.data.observe(this, Observer { newData ->
-                awairDataState.value = newData
-            })
-
-            statisticsViewModel.statistic.observe(this, Observer {
-                statisticsTransitionState.value = "invisible"
-                handler.postDelayed({
-                    statisticsState.value = it
-                    statisticsTransitionState.value = "visible"
-                }, 1000)
-            })
-
-            statisticsViewModel.graph.observe(this, Observer { data ->
-                graphState.value = data
-            })
-            statisticsViewModel.graph2.observe(this, Observer { data ->
-                graph2State.value = data
-            })
-
-            newsViewModel.entry.observe(this, Observer { entry ->
-                newsState.value = entry
-            })
             newsViewModel.launch(volleyQueue)
-
-            weatherViewModel.data.observe(this, Observer { data ->
-                weatherTransitionState.value = "invisible"
-                handler.postDelayed({
-                    weatherState.value = data
-                    weatherTransitionState.value = "visible"
-                }, 1000)
-            })
             weatherViewModel.launch(volleyQueue)
-
-            val opacity = FloatPropKey("Opacity")
-            val fadeTransition = transitionDefinition<String> {
-                state("visible") {
-                    this[opacity] = 1.0F
-                }
-                state("invisible") {
-                    this[opacity] = 0F
-                }
-
-                transition("visible" to "invisible") {
-                    opacity using tween(500, easing = FastOutLinearInEasing)
-                }
-
-                transition("invisible" to "visible") {
-                    opacity using tween(500, easing = FastOutSlowInEasing)
-                }
-            }
 
             SilikaHorloĝoTheme(darkTheme = true) {
                 Surface {
-                    Stack {
-                        val silican = SilicanDateTime.fromLocalDateTime(clockState.value)
-                        Background(applicationContext, silican.date, silican.time)
-                        newsState.value?.let {
-                            TickerTape(entry = it)
+                    val silican = SilicanDateTime.fromLocalDateTime(clockState)
+                    Background(applicationContext, silican.date, silican.time)
+                    graphState?.let { graph1 ->
+                        graph2State?.let { graph2 ->
+                            Fonto(stats = graph1, stats2 = graph2)
                         }
-                        graphState.value?.let {
-                            Fonto(stats = it, stats2 = graph2State.value)
-                        }
-                        awairDataState.value?.let {
-                            AwairDataStrip(it, if (newsState.value != null) 40.dp else 10.dp)
-                        }
-                        Box(modifier = Modifier.offset(y = if (awairDataState.value == null) (-20).dp else 0.dp)) {
-                            Clock(clockState.value, onClick = {
-                                val prev = preferences.getBoolean("useSilican", false)
-                                preferences.edit {
-                                    putBoolean("useSilican", !prev)
-                                    clockFormatState.value = !prev
-                                }
-                            }, useSilican = clockFormatState.value)
-                        }
-                        Transition(
-                            definition = fadeTransition, toState =
-                            weatherTransitionState.value
+                    }
+                    awairDataState?.let {
+                        AwairDataStrip(it, 10.dp)
+                    }
+                    Box(modifier = Modifier.offset(y = if (awairDataState == null) (-20).dp else 0.dp)) {
+                        Clock(clockState, onClick = {
+                            val prev = preferences.getBoolean("useSilican", false)
+                            preferences.edit {
+                                putBoolean("useSilican", !prev)
+                                clockFormatState.value = !prev
+                            }
+                        }, useSilican = clockFormatState.value)
+                    }
+                    Crossfade(weatherState) { weather ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(10.dp),
+                            contentAlignment = Alignment.BottomStart
                         ) {
-                            Box(
-                                modifier = Modifier.fillMaxSize().padding(10.dp)
-                                    .drawOpacity(it[opacity]),
-                                alignment = Alignment.BottomStart
-                            ) {
-                                weatherState.value?.let {
-                                    StatisticDisplay(
-                                        statistic = it,
-                                        onClick = {},
-                                        alignment = Alignment.Start
-                                    )
-                                }
+                            weather?.let {
+                                StatisticDisplay(
+                                    statistic = it,
+                                    onClick = {},
+                                    alignment = Alignment.Start
+                                )
                             }
                         }
-                        Transition(
-                            definition = fadeTransition,
-                            toState = statisticsTransitionState.value
-                        ) { state ->
-                            Box(
-                                modifier = Modifier.fillMaxSize().padding(10.dp)
-                                    .drawOpacity(state[opacity]).clickable(onClick = {
-                                        statisticsViewModel.refresh()
-                                    }),
-                                alignment = Alignment.BottomEnd
-                            ) {
-                                statisticsState.value?.let {
-                                    StatisticDisplay(
-                                        statistic = it,
-                                        onClick = {},
-                                        alignment = Alignment.End
-                                    )
-                                }
+                    }
+                    Crossfade(statisticsState) { statistics ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(10.dp),
+                            contentAlignment = Alignment.BottomEnd
+                        ) {
+                            statistics?.let {
+                                StatisticDisplay(
+                                    statistic = it,
+                                    onClick = {},
+                                    alignment = Alignment.End
+                                )
                             }
                         }
                     }
@@ -247,26 +189,26 @@ class MainActivity : AppCompatActivity() {
 @Composable
 fun Background(context: Context, date: SilicanDate, time: SilicanTime) {
     val resources = context.resources
-    Stack {
-        Image(
-            asset = imageFromResource(
-                resources,
-                R.drawable.background_top
-            ),
-            colorFilter = ColorFilter.tint(
-                resources.getColor(weekdayColours[date.weekday - 1], null)
-                    .let(::Color)
-            )
+    Image(
+        imageFromResource(
+            resources,
+            R.drawable.background_top
+        ),
+        null,
+        colorFilter = ColorFilter.tint(
+            resources.getColor(weekdayColours[date.weekday - 1], null)
+                .let(::Color)
         )
-        Image(
-            asset = imageFromResource(
-                resources,
-                R.drawable.background_bottom
-            ),
-            colorFilter = ColorFilter.tint(
-                resources.getColor(phaseColours[time.phase], null)
-                    .let(::Color)
-            )
+    )
+    Image(
+        imageFromResource(
+            resources,
+            R.drawable.background_bottom
+        ),
+        null,
+        colorFilter = ColorFilter.tint(
+            resources.getColor(phaseColours[time.phase], null)
+                .let(::Color)
         )
-    }
+    )
 }

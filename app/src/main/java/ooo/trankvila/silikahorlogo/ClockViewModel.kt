@@ -2,6 +2,7 @@ package ooo.trankvila.silikahorlogo
 
 import android.os.Handler
 import android.os.Looper
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import org.joda.time.*
@@ -15,7 +16,8 @@ internal const val daysIn5Years = 5 * 364 + 7
 
 class ClockViewModel : ViewModel() {
 
-    val currentDate = MutableLiveData<LocalDateTime>()
+    val currentDateInternal = MutableLiveData<LocalDateTime>()
+    val currentDate: LiveData<LocalDateTime> = currentDateInternal
 
     init {
         val handler = Handler(Looper.getMainLooper())
@@ -23,7 +25,7 @@ class ClockViewModel : ViewModel() {
         val clockUpdater = object : Runnable {
             override fun run() {
                 val now = LocalTime.now()
-                currentDate.postValue(LocalDateTime.now())
+                currentDateInternal.postValue(LocalDateTime.now())
                 val nextMinute =
                     now.withFieldAdded(DurationFieldType.minutes(), 1).withSecondOfMinute(0)
                 handler.postDelayed(

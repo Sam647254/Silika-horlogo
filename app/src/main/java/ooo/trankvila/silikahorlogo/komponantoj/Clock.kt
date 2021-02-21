@@ -1,8 +1,8 @@
 package ooo.trankvila.silikahorlogo.komponantoj
 
-import androidx.compose.foundation.Text
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -13,7 +13,6 @@ import ooo.trankvila.silikahorlogo.ui.Saira
 import ooo.trankvila.silikahorlogo.ui.SairaSemibold
 import ooo.trankvila.silikahorlogo.ui.TimeShadow
 import ooo.trankvila.silikahorlogo.ui.shadow
-import org.joda.time.LocalDate
 import org.joda.time.LocalDateTime
 
 @Composable

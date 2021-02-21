@@ -1,10 +1,10 @@
 package ooo.trankvila.silikahorlogo.komponantoj
 
 import androidx.compose.animation.Crossfade
-import androidx.compose.foundation.Text
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -13,7 +13,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ooo.trankvila.silikahorlogo.ui.Saira
 import ooo.trankvila.silikahorlogo.ui.shadow
-import ooo.trankvila.silikahorlogo.ui.shadowStyle
 
 @Composable
 fun TickerTape(entry: TickerTapeEntry) {
