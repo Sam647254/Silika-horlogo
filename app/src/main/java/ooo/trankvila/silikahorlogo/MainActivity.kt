@@ -1,11 +1,7 @@
 package ooo.trankvila.silikahorlogo
 
 import android.content.Context
-import android.media.AudioAttributes
-import android.media.MediaPlayer
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
@@ -31,13 +27,8 @@ import androidx.compose.ui.graphics.imageFromResource
 import androidx.compose.ui.platform.setContent
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
-import com.amazonaws.auth.CognitoCachingCredentialsProvider
 import com.amazonaws.auth.CognitoCredentialsProvider
-import com.amazonaws.regions.Regions
 import com.amazonaws.services.polly.AmazonPollyPresigningClient
-import com.amazonaws.services.polly.model.Engine
-import com.amazonaws.services.polly.model.OutputFormat
-import com.amazonaws.services.polly.model.SynthesizeSpeechPresignRequest
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.Volley
 import ooo.trankvila.silikahorlogo.komponantoj.AwairDataStrip
@@ -53,11 +44,8 @@ class MainActivity : AppCompatActivity() {
     private val clockViewModel: ClockViewModel by viewModels()
     private val awairViewModel: AwairViewModel by viewModels()
     private val statisticsViewModel: StatisticsViewModel by viewModels()
-    private val newsViewModel: NewsViewModel by viewModels()
     private val weatherViewModel: WeatherViewModel by viewModels()
 
-    private lateinit var credentialsProvider: CognitoCredentialsProvider
-    private lateinit var pollyClient: AmazonPollyPresigningClient
     private lateinit var volleyQueue: RequestQueue
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,39 +55,6 @@ class MainActivity : AppCompatActivity() {
 
         volleyQueue = Volley.newRequestQueue(this)
 
-        newsViewModel.synthesizeSpeech = { text ->
-            if (!::credentialsProvider.isInitialized) {
-                credentialsProvider = CognitoCachingCredentialsProvider(
-                    applicationContext,
-                    CognitoIdentityPoolId,
-                    Regions.US_WEST_2
-                )
-                pollyClient = AmazonPollyPresigningClient(credentialsProvider)
-            }
-            val request = SynthesizeSpeechPresignRequest().apply {
-                this.text = text
-                voiceId = "Emma"
-                engine = Engine.Neural
-                setOutputFormat(OutputFormat.Mp3)
-            }
-            val url = pollyClient.getPresignedSynthesizeSpeechUrl(request)
-            MediaPlayer().apply {
-                setAudioAttributes(
-                    AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                        .build()
-                )
-                setDataSource(url.toString())
-                prepareAsync()
-                setOnPreparedListener {
-                    it.start()
-                }
-                setOnCompletionListener {
-                    it.release()
-                }
-            }
-        }
-
-        val handler = Handler(Looper.getMainLooper())
         val preferences = getPreferences(MODE_PRIVATE)
 
         setContent {
@@ -114,7 +69,6 @@ class MainActivity : AppCompatActivity() {
             val weatherState: DataDisplay? by weatherViewModel.data.observeAsState()
 
             awairViewModel.launch(volleyQueue)
-            newsViewModel.launch(volleyQueue)
             weatherViewModel.launch(volleyQueue)
 
             SilikaHorloĝoTheme(darkTheme = true) {

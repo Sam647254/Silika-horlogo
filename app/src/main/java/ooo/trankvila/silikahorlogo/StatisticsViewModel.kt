@@ -157,7 +157,6 @@ class StatisticsViewModel : ViewModel() {
     private fun fetch(url: String) = responseCache.computeIfAbsent(url) {
         (URL(url).openConnection() as HttpsURLConnection).run {
             requestMethod = "GET"
-            addRequestProperty("X-App-Token", SocrataAppToken)
             inputStream.bufferedReader().readText()
         }
     }
