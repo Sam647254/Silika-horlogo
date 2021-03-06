@@ -47,6 +47,23 @@ class StatisticsViewModel : ViewModel() {
             val province = data.getJSONObject(i)
             province.getString("province") == "BC"
         }.let { data.getJSONObject(it) }
+        val total = bcData.getInt("total_vaccinations")
+        val change = bcData.getInt("change_vaccinations")
+        TextData(
+            formatNumber(total),
+            if (change > 0) "(${formatNumber(change)} new)" else null,
+            "Vaccinated in BC as of ${
+                LocalDate.parse(bcData.getString("date"))
+                    .let(SilicanDate.Companion::fromGregorian).shortDate
+            } (COVID-19 Tracker Canada)"
+        )
+    }, {
+        val data = fetch("https://api.covid19tracker.ca/summary/split").let(::JSONObject)
+            .getJSONArray("data")
+        val bcData = (0 until data.length()).first { i ->
+            val province = data.getJSONObject(i)
+            province.getString("province") == "BC"
+        }.let { data.getJSONObject(it) }
         val population = 5110917
         val total = bcData.getInt("total_vaccinations")
         val twice = bcData.getInt("total_vaccinated")
@@ -89,31 +106,18 @@ class StatisticsViewModel : ViewModel() {
         )
     }, {
         val data =
-            fetch("https://api.covidactnow.org/v2/county/53033.json?apiKey=${CovidActNowKey}").let(
-                ::JSONObject
-            )
-        TextData(
-            data.getJSONObject("metrics").getDouble("infectionRate").let { "%.3f".format(it) },
-            null,
-            "King County R-effective as of ${
-                LocalDate.parse(data.getString("lastUpdatedDate"))
-                    .let(SilicanDate.Companion::fromGregorian).shortDate
-            } (CovidActNow.org)"
-        )
-    }, {
-        val data =
-            fetch("https://covidtracking.com/api/v1/states/wa/current.json").let(::JSONObject)
-        val total = data.getInt("positive").let(::formatNumber)
+            fetch("https://api.covidactnow.org/v2/state/WA.json?apiKey=${CovidActNowKey}").let(::JSONObject)
+        val total = data.getJSONObject("actuals").getInt("cases").let(::formatNumber)
         val new =
-            data.getInt("positiveIncrease").let { if (it > 0) it else null }?.let(::formatNumber)
+            data.getJSONObject("actuals").getInt("newCases").let { if (it > 0) it else null }?.let(::formatNumber)
         TextData(
             total,
             if (new != null) "($new new)" else null,
             "cases in Washington as of ${
-                data.getInt("date").let {
-                    LocalDate.parse(it.toString(), DateTimeFormat.forPattern("YYYYMMdd"))
+                data.getString("lastUpdatedDate").let {
+                    LocalDate.parse(it, DateTimeFormat.forPattern("YYYY-MM-dd"))
                 }.let(SilicanDate.Companion::fromGregorian).shortDate
-            } (The COVID Tracking Project)"
+            } (CovidActNow.org)"
         )
     })
     private var statisticIndex = 0
@@ -184,6 +188,7 @@ class StatisticsViewModel : ViewModel() {
 
     private fun formatNumber(it: Int) =
         when {
+            it >= 1_000_000 -> "%.2fM".format(it / 1_000_000.0)
             it >= 100_000 -> "%dK".format((it / 1000.0).roundToInt())
             it >= 10_000 -> "%,d".format(Locale.CANADA_FRENCH, it)
             else -> it.toString()
