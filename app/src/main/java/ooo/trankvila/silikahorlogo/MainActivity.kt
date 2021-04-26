@@ -64,8 +64,8 @@ class MainActivity : AppCompatActivity() {
             val clockState: LocalDateTime by clockViewModel.currentDate.observeAsState(LocalDateTime.now())
             val awairDataState: AwairData? by awairViewModel.data.observeAsState()
             val statisticsState: DataDisplay? by statisticsViewModel.statistic.observeAsState()
-            val graphState: List<Int>? by statisticsViewModel.graph.observeAsState()
-            val graph2State: List<Int>? by statisticsViewModel.graph2.observeAsState()
+            val graphState: List<Double>? by statisticsViewModel.graph.observeAsState()
+            val graph2State: List<Double>? by statisticsViewModel.graph2.observeAsState()
             val weatherState: DataDisplay? by weatherViewModel.data.observeAsState()
 
             awairViewModel.launch(volleyQueue)
