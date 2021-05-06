@@ -186,11 +186,13 @@ class StatisticsViewModel : ViewModel() {
             }.let(graph2::postValue)
     }
 
-    private fun formatNumber(it: Int) =
-        when {
-            it >= 1_000_000 -> "%.2fM".format(it / 1_000_000.0)
-            it >= 100_000 -> "%dK".format((it / 1000.0).roundToInt())
-            it >= 10_000 -> "%,d".format(Locale.CANADA_FRENCH, it)
-            else -> it.toString()
-        }
+    companion object {
+        fun formatNumber(it: Int) =
+            when {
+                it >= 1_000_000 -> "%.2fM".format(it / 1_000_000.0)
+                it >= 100_000 -> "%dK".format((it / 1000.0).roundToInt())
+                it >= 10_000 -> "%,d".format(Locale.CANADA_FRENCH, it)
+                else -> it.toString()
+            }
+    }
 }

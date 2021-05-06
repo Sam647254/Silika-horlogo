@@ -48,6 +48,8 @@ data class SilicanDateTime(val date: SilicanDate, val time: SilicanTime) {
                 SilicanTime.fromStandard(localDateTime.toLocalTime())
             )
     }
+
+    override fun toString() = "$date $time"
 }
 
 data class AwairData(
@@ -68,7 +70,10 @@ data class SilicanTime(val phase: Int, val hour: Int, val minute: Int) {
         }
 
         val now get() = fromStandard(LocalTime.now())
+        val phases = listOf("Velima", "Daruna", "Gemira")
     }
+
+    override fun toString() = "${phases[phase][0]}$hour ${minute.toString().padStart(2, '0')}"
 }
 
 data class CasesCount(val total: Int, val new: Int)
@@ -137,4 +142,6 @@ data class SilicanDate(val year: Int, val season: Int, val week: Int, val weekda
     val currentSeason = seasons[season - 1]
     val currentWeek = weeks[week - 1]
     val currentWeekday = weekdays[weekday - 1]
+
+    override fun toString() = shortDate
 }

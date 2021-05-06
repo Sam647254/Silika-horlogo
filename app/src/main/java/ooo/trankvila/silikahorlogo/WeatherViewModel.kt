@@ -97,13 +97,13 @@ data class WeatherResponse(
     val sunset: LocalDateTime
 )
 
-private fun windDirection(degree: Int) = when (degree) {
-    in 0..25, in 335..359 -> "Northerly"
-    in 26..65 -> "North-easterly"
-    in 66..115 -> "Easterly"
-    in 116..155 -> "South-easterly"
-    in 156..205 -> "Southerly"
-    in 206..245 -> "South-westerly"
-    in 246..305 -> "Westerly"
-    else -> "North-westerly"
+fun windDirection(degree: Int) = when (degree) {
+    in 0..25, in 335..359 -> "N"
+    in 26..65 -> "NE"
+    in 66..115 -> "E"
+    in 116..155 -> "SE"
+    in 156..205 -> "S"
+    in 206..245 -> "SW"
+    in 246..305 -> "W"
+    else -> "NW"
 }

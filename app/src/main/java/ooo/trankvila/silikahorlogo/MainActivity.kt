@@ -9,11 +9,9 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -25,19 +23,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.imageFromResource
 import androidx.compose.ui.platform.setContent
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.edit
-import com.amazonaws.auth.CognitoCredentialsProvider
-import com.amazonaws.services.polly.AmazonPollyPresigningClient
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.Volley
-import ooo.trankvila.silikahorlogo.komponantoj.AwairDataStrip
-import ooo.trankvila.silikahorlogo.komponantoj.Clock
-import ooo.trankvila.silikahorlogo.komponantoj.Fonto
-import ooo.trankvila.silikahorlogo.komponantoj.StatisticDisplay
-import ooo.trankvila.silikahorlogo.ui.SilikaHorloĝoTheme
-import ooo.trankvila.silikahorlogo.ui.phaseColours
-import ooo.trankvila.silikahorlogo.ui.weekdayColours
+import ooo.trankvila.silikahorlogo.komponantoj.*
+import ooo.trankvila.silikahorlogo.ui.*
 import org.joda.time.LocalDateTime
 
 class MainActivity : AppCompatActivity() {
@@ -45,6 +38,7 @@ class MainActivity : AppCompatActivity() {
     private val awairViewModel: AwairViewModel by viewModels()
     private val statisticsViewModel: StatisticsViewModel by viewModels()
     private val weatherViewModel: WeatherViewModel by viewModels()
+    private val dataBarViewModel by viewModels<DataBarViewModel>()
 
     private lateinit var volleyQueue: RequestQueue
 
@@ -63,13 +57,14 @@ class MainActivity : AppCompatActivity() {
 
             val clockState: LocalDateTime by clockViewModel.currentDate.observeAsState(LocalDateTime.now())
             val awairDataState: AwairData? by awairViewModel.data.observeAsState()
-            val statisticsState: DataDisplay? by statisticsViewModel.statistic.observeAsState()
             val graphState: List<Double>? by statisticsViewModel.graph.observeAsState()
             val graph2State: List<Double>? by statisticsViewModel.graph2.observeAsState()
-            val weatherState: DataDisplay? by weatherViewModel.data.observeAsState()
+            val dataBarItemState: DataBarItem by dataBarViewModel.current.observeAsState(DataBarItem.CurrentWeather)
+            val dataBarDataState: DataBar? by dataBarViewModel.currentData.observeAsState()
 
             awairViewModel.launch(volleyQueue)
             weatherViewModel.launch(volleyQueue)
+            dataBarViewModel.launch(volleyQueue)
 
             SilikaHorloĝoTheme(darkTheme = true) {
                 Surface {
@@ -80,8 +75,21 @@ class MainActivity : AppCompatActivity() {
                             Fonto(stats = graph1, stats2 = graph2)
                         }
                     }
-                    awairDataState?.let {
-                        AwairDataStrip(it, 10.dp)
+                    Crossfade(dataBarDataState) { dataBar ->
+                        if (dataBar == null) {
+                            Text(
+                                text = "Loading...",
+                                fontFamily = Saira,
+                                style = shadow,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 20.dp),
+                                textAlign = TextAlign.Center,
+                                fontSize = 40.sp,
+                            )
+                        } else {
+                            DataFieldBar(dataBar)
+                        }
                     }
                     Box(modifier = Modifier.offset(y = if (awairDataState == null) (-20).dp else 0.dp)) {
                         Clock(clockState, onClick = {
@@ -92,37 +100,12 @@ class MainActivity : AppCompatActivity() {
                             }
                         }, useSilican = clockFormatState.value)
                     }
-                    Crossfade(weatherState) { weather ->
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(10.dp),
-                            contentAlignment = Alignment.BottomStart
-                        ) {
-                            weather?.let {
-                                StatisticDisplay(
-                                    statistic = it,
-                                    onClick = {},
-                                    alignment = Alignment.Start
-                                )
-                            }
-                        }
-                    }
-                    Crossfade(statisticsState) { statistics ->
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(10.dp),
-                            contentAlignment = Alignment.BottomEnd
-                        ) {
-                            statistics?.let {
-                                StatisticDisplay(
-                                    statistic = it,
-                                    onClick = {},
-                                    alignment = Alignment.End
-                                )
-                            }
-                        }
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .padding(30.dp), contentAlignment = Alignment.BottomCenter
+                    ) {
+                        DataCategoryBar(dataBarItemState)
                     }
                 }
             }
