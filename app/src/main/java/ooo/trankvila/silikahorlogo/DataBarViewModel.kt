@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.android.volley.RequestQueue
+import com.android.volley.toolbox.JsonArrayRequest
 import com.android.volley.toolbox.JsonObjectRequest
 import ooo.trankvila.silikahorlogo.komponantoj.DataBar
 import ooo.trankvila.silikahorlogo.komponantoj.DataBarFieldData
@@ -13,11 +14,12 @@ import ooo.trankvila.silikahorlogo.komponantoj.DataBarItem
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.LocalDate
+import org.joda.time.LocalTime
 import org.joda.time.format.DateTimeFormat
 import java.util.*
 
 class DataBarViewModel : ViewModel() {
-    val current = MutableLiveData(DataBarItem.FoodMenu)
+    val current = MutableLiveData(DataBarItem.WashingtonStats)
     val currentData = MutableLiveData<DataBar?>(null)
     private val items = DataBarItem.values()
     private var currentItem = items.size - 1
@@ -29,7 +31,7 @@ class DataBarViewModel : ViewModel() {
     private val fetchers: List<(RequestQueue, (DataBar) -> Unit) -> Unit> = listOf({ queue, cb ->
         // Current weather
         queue.add(JsonObjectRequest(
-            "https://api.openweathermap.org/data/2.5/weather?id=6159905&appid=${weatherApiKey}&units=metric",
+            "https://api.openweathermap.org/data/2.5/weather?id=5786882&appid=${weatherApiKey}&units=metric",
             null,
             { response ->
                 val time = DateTime(
@@ -41,7 +43,7 @@ class DataBarViewModel : ViewModel() {
                     SilicanTime.fromStandard(time.toLocalTime())
                 )
                 val dataBar = DataBar(
-                    listOf(
+                    listOfNotNull(
                         DataBarFieldData(
                             response.getJSONArray("weather").getJSONObject(0).getString("main"),
                             "",
@@ -90,8 +92,8 @@ class DataBarViewModel : ViewModel() {
                                 "3-hour snow"
                             )
                         }
-                    ).filterNotNull(),
-                    "Weather in Surrey, BC as of $date (OpenWeatherMap.org)"
+                    ),
+                    "Weather in Bellevue, WA as of $date (OpenWeatherMap.org)"
                 )
                 cb(dataBar)
             }, { error ->
@@ -100,7 +102,7 @@ class DataBarViewModel : ViewModel() {
         ))
     }, { queue, cb ->
         // Awair data
-        queue.add(JsonObjectRequest("http://192.168.86.46/air-data/latest", null, { response ->
+        queue.add(JsonObjectRequest("http://10.0.0.208/air-data/latest", null, { response ->
             val time = DateTime(response.getString("timestamp"), DateTimeZone.UTC)
             val date = SilicanDateTime.fromLocalDateTime(
                 time.withZone(
@@ -275,7 +277,38 @@ class DataBarViewModel : ViewModel() {
                 })
         )
     }, { queue, cb ->
-
+        queue.add(JsonArrayRequest(mealsUrl, { response ->
+            val today = LocalDate.now()
+            val todayMenu = (0 until response.length()).first { i ->
+                val date = response.getJSONObject(i).getString("date").let(LocalDate::parse)
+                date.equals(today)
+            }.let(response::getJSONObject)
+            val tomorrowMenu = (0 until response.length()).first { i ->
+                val date = response.getJSONObject(i).getString("date").let(LocalDate::parse)
+                date.equals(today.plusDays(1))
+            }.let(response::getJSONObject)
+            val time = LocalTime.now().hourOfDay
+            val todayLunch = DataBarFieldData(todayMenu.optString("lunch"), "", "Today's lunch")
+            val todayDinner = DataBarFieldData(todayMenu.optString("dinner"), "", "Today's dinner")
+            val tomorrowLunch =
+                DataBarFieldData(tomorrowMenu.optString("lunch"), "", "Tomorrow's lunch")
+            val tomorrowDinner =
+                DataBarFieldData(tomorrowMenu.optString("dinner"), "", "Tomorrow's dinner")
+            val menu = when {
+                time < 15 -> {
+                    DataBar(listOf(todayLunch, todayDinner))
+                }
+                time < 22 -> {
+                    DataBar(listOf(todayDinner, tomorrowLunch))
+                }
+                else -> {
+                    DataBar(listOf(tomorrowLunch, tomorrowDinner))
+                }
+            }
+            cb(menu)
+        }, { error ->
+            Log.e("DataBarViewModel", error.message, error.cause)
+        }))
     })
 
     fun launch(requestQueue: RequestQueue) {

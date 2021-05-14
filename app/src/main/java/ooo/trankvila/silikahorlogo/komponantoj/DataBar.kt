@@ -6,6 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -63,28 +65,53 @@ data class DataBar(val fields: List<DataBarFieldData>, val caption: String? = nu
 
 @Composable
 fun DataFieldBar(dataBar: DataBar) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+    if (dataBar.caption == null) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(start = 20.dp)) {
             for (field in dataBar.fields) {
-                val value = field.value
-                if (value is Int) {
-                    DataBarField(
-                        value = value,
-                        label = field.label,
-                        unit = field.unit
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(
+                        buildAnnotatedString {
+                            pushStyle(SpanStyle(fontSize = 20.sp))
+                            append(field.label)
+                            append("  ")
+                            pushStyle(SpanStyle(fontSize = 35.sp))
+                            append(field.value as String)
+                        },
+                        style = shadow,
+                        fontFamily = Saira,
+                        maxLines = 1
                     )
-                } else if (value is Double) {
-                    DataBarField(
-                        value = value,
-                        label = field.label,
-                        unit = field.unit
-                    )
-                } else if (value is String) {
-                    DataBarField(value = value, label = field.label, unit = field.unit)
                 }
             }
         }
-        if (dataBar.caption != null) {
+    } else {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                for (field in dataBar.fields) {
+                    when (val value = field.value) {
+                        is Int -> {
+                            DataBarField(
+                                value = value,
+                                label = field.label,
+                                unit = field.unit
+                            )
+                        }
+                        is Double -> {
+                            DataBarField(
+                                value = value,
+                                label = field.label,
+                                unit = field.unit
+                            )
+                        }
+                        is String -> {
+                            DataBarField(value = value, label = field.label, unit = field.unit)
+                        }
+                    }
+                }
+            }
             Text(text = dataBar.caption, fontFamily = Saira, style = shadow, fontSize = 17.sp)
         }
     }
