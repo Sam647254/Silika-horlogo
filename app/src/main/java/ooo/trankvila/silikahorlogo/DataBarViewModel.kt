@@ -19,8 +19,9 @@ import org.joda.time.format.DateTimeFormat
 import java.util.*
 
 class DataBarViewModel : ViewModel() {
-    val current = MutableLiveData(DataBarItem.WashingtonStats)
+    val current = MutableLiveData(DataBarItem.CurrentWeather)
     val currentData = MutableLiveData<DataBar?>(null)
+    val held = MutableLiveData(false)
     private val items = DataBarItem.values()
     private var currentItem = items.size - 1
     private val cache = mutableMapOf<DataBarItem, DataBar>()
@@ -28,6 +29,7 @@ class DataBarViewModel : ViewModel() {
         DataBarItem.CurrentWeather to 1800,
         DataBarItem.IndoorConditions to 15
     )
+    private lateinit var requestQueue: RequestQueue
     private val fetchers: List<(RequestQueue, (DataBar) -> Unit) -> Unit> = listOf({ queue, cb ->
         // Current weather
         queue.add(JsonObjectRequest(
@@ -102,7 +104,7 @@ class DataBarViewModel : ViewModel() {
         ))
     }, { queue, cb ->
         // Awair data
-        queue.add(JsonObjectRequest("http://10.0.0.208/air-data/latest", null, { response ->
+        queue.add(JsonObjectRequest("http://10.0.0.207/air-data/latest", null, { response ->
             val time = DateTime(response.getString("timestamp"), DateTimeZone.UTC)
             val date = SilicanDateTime.fromLocalDateTime(
                 time.withZone(
@@ -312,23 +314,8 @@ class DataBarViewModel : ViewModel() {
     })
 
     fun launch(requestQueue: RequestQueue) {
+        this.requestQueue = requestQueue
         val handler = Handler(Looper.getMainLooper())
-        val shifter = object : Runnable {
-            override fun run() {
-                currentItem = (currentItem + 1) % items.size
-                current.postValue(items[currentItem])
-                if (cache.containsKey(items[currentItem])) {
-                    currentData.postValue(cache[items[currentItem]]!!)
-                } else {
-                    currentData.postValue(null)
-                    fetchers[currentItem](requestQueue) { data ->
-                        updateDisplay(items[currentItem], data)
-                    }
-                }
-
-                handler.postDelayed(this, 15_000)
-            }
-        }
         cacheTTL.forEach { (item, TTL) ->
             val remover = object : Runnable {
                 override fun run() {
@@ -340,7 +327,42 @@ class DataBarViewModel : ViewModel() {
             }
             remover.run()
         }
-        shifter.run()
+        beginShifter()
+    }
+
+    fun holdSelected(selected: DataBarItem) {
+        if (held.value == true && selected == current.value) {
+            held.postValue(false)
+            beginShifter()
+        } else {
+            held.postValue(true)
+            goToItem(selected.ordinal)
+        }
+    }
+
+    private fun beginShifter() {
+        val handler = Handler(Looper.getMainLooper())
+        val shifter = object : Runnable {
+            override fun run() {
+                if (held.value == true) return
+                goToItem((currentItem + 1) % items.size)
+                handler.postDelayed(this, 15_000)
+            }
+        }
+        handler.postDelayed(shifter, 15_000)
+    }
+
+    private fun goToItem(item: Int) {
+        currentItem = item
+        current.postValue(items[currentItem])
+        if (cache.containsKey(items[currentItem])) {
+            currentData.postValue(cache[items[currentItem]]!!)
+        } else {
+            currentData.postValue(null)
+            fetchers[currentItem](requestQueue) { data ->
+                updateDisplay(items[currentItem], data)
+            }
+        }
     }
 
     private fun updateDisplay(item: DataBarItem, dataBar: DataBar) {

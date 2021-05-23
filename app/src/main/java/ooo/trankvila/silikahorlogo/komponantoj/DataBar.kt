@@ -1,5 +1,6 @@
 package ooo.trankvila.silikahorlogo.komponantoj
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -31,7 +32,7 @@ val dataBarItems = listOf(
 )
 
 @Composable
-fun DataCategoryBar(current: DataBarItem) {
+fun DataCategoryBar(current: DataBarItem, held: Boolean, onClick: (DataBarItem) -> Unit) {
     Row(
         Modifier.fillMaxWidth(),
         Arrangement.Center,
@@ -44,10 +45,11 @@ fun DataCategoryBar(current: DataBarItem) {
                 fontFamily = Saira,
                 style = shadow,
                 modifier = Modifier
-                    .alpha(if (current == item) 1F else 0.5F)
-                    .padding(horizontal = 15.dp),
+                    .alpha(if (current == item) 1F else if (held) 0.1F else 0.5F)
+                    .padding(horizontal = 15.dp)
+                    .clickable { onClick(item) },
                 textAlign = TextAlign.Center,
-                lineHeight = 30.sp
+                lineHeight = 30.sp,
             )
         }
     }
@@ -69,7 +71,8 @@ fun DataFieldBar(dataBar: DataBar) {
         Column(
             Modifier
                 .fillMaxWidth()
-                .padding(start = 20.dp)) {
+                .padding(start = 20.dp)
+        ) {
             for (field in dataBar.fields) {
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
@@ -96,14 +99,16 @@ fun DataFieldBar(dataBar: DataBar) {
                             DataBarField(
                                 value = value,
                                 label = field.label,
-                                unit = field.unit
+                                unit = field.unit,
+                                normalRange = field.normalRange,
+                                warning1Range = field.warning1Range
                             )
                         }
                         is Double -> {
                             DataBarField(
                                 value = value,
                                 label = field.label,
-                                unit = field.unit
+                                unit = field.unit,
                             )
                         }
                         is String -> {

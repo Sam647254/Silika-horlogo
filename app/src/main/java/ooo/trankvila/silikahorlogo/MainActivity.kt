@@ -61,6 +61,7 @@ class MainActivity : AppCompatActivity() {
             val graph2State: List<Double>? by statisticsViewModel.graph2.observeAsState()
             val dataBarItemState: DataBarItem by dataBarViewModel.current.observeAsState(DataBarItem.CurrentWeather)
             val dataBarDataState: DataBar? by dataBarViewModel.currentData.observeAsState()
+            val dataBarHeldState: Boolean by dataBarViewModel.held.observeAsState(false)
 
             awairViewModel.launch(volleyQueue)
             weatherViewModel.launch(volleyQueue)
@@ -105,7 +106,7 @@ class MainActivity : AppCompatActivity() {
                             .fillMaxSize()
                             .padding(30.dp), contentAlignment = Alignment.BottomCenter
                     ) {
-                        DataCategoryBar(dataBarItemState)
+                        DataCategoryBar(dataBarItemState, dataBarHeldState, dataBarViewModel::holdSelected)
                     }
                 }
             }
