@@ -165,7 +165,7 @@ class StatisticsViewModel : ViewModel() {
         }
     }
 
-    private fun fetchGraph() {
+    fun fetchGraph() {
         fetch("https://api.covidactnow.org/v2/state/WA.timeseries.json?apiKey=${CovidActNowKey}").let(::JSONObject)
             .let {
                 it.getJSONArray("metricsTimeseries").let { data ->

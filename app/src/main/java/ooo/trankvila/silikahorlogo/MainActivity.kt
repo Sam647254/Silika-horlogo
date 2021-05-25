@@ -89,7 +89,10 @@ class MainActivity : AppCompatActivity() {
                                 fontSize = 40.sp,
                             )
                         } else {
-                            DataFieldBar(dataBar)
+                            DataFieldBar(dataBar) {
+                                dataBarViewModel.refresh()
+                                statisticsViewModel.fetchGraph()
+                            }
                         }
                     }
                     Box(modifier = Modifier.offset(y = if (awairDataState == null) (-20).dp else 0.dp)) {
@@ -98,6 +101,7 @@ class MainActivity : AppCompatActivity() {
                             preferences.edit {
                                 putBoolean("useSilican", !prev)
                                 clockFormatState.value = !prev
+                                makeFullscreen()
                             }
                         }, useSilican = clockFormatState.value)
                     }
@@ -115,6 +119,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        makeFullscreen()
+    }
+
+    private fun makeFullscreen() {
         window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_IMMERSIVE
                 or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                 or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION

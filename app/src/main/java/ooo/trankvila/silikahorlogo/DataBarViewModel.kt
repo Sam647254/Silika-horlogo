@@ -26,10 +26,12 @@ class DataBarViewModel : ViewModel() {
     private var currentItem = items.size - 1
     private val cache = mutableMapOf<DataBarItem, DataBar>()
     private val cacheTTL = mapOf(
-        DataBarItem.CurrentWeather to 1800,
+        DataBarItem.CurrentWeather to 900,
         DataBarItem.IndoorConditions to 15
     )
     private lateinit var requestQueue: RequestQueue
+    private lateinit var shifter: Runnable
+    private lateinit var handler: Handler
     private val fetchers: List<(RequestQueue, (DataBar) -> Unit) -> Unit> = listOf({ queue, cb ->
         // Current weather
         queue.add(JsonObjectRequest(
@@ -315,7 +317,7 @@ class DataBarViewModel : ViewModel() {
 
     fun launch(requestQueue: RequestQueue) {
         this.requestQueue = requestQueue
-        val handler = Handler(Looper.getMainLooper())
+        handler = Handler(Looper.getMainLooper())
         cacheTTL.forEach { (item, TTL) ->
             val remover = object : Runnable {
                 override fun run() {
@@ -327,6 +329,12 @@ class DataBarViewModel : ViewModel() {
             }
             remover.run()
         }
+        shifter = object : Runnable {
+            override fun run() {
+                goToItem((currentItem + 1) % items.size)
+                handler.postDelayed(this, 15_000)
+            }
+        }
         beginShifter()
     }
 
@@ -337,19 +345,24 @@ class DataBarViewModel : ViewModel() {
         } else {
             held.postValue(true)
             goToItem(selected.ordinal)
+            stopShifter()
         }
     }
 
+    fun refresh() {
+        val currentItem = current.value ?: return
+        cache.remove(currentItem)
+        goToItem(currentItem.ordinal)
+        stopShifter()
+        beginShifter()
+    }
+
     private fun beginShifter() {
-        val handler = Handler(Looper.getMainLooper())
-        val shifter = object : Runnable {
-            override fun run() {
-                if (held.value == true) return
-                goToItem((currentItem + 1) % items.size)
-                handler.postDelayed(this, 15_000)
-            }
-        }
         handler.postDelayed(shifter, 15_000)
+    }
+
+    private fun stopShifter() {
+        handler.removeCallbacks(shifter)
     }
 
     private fun goToItem(item: Int) {
