@@ -2,6 +2,7 @@ package ooo.trankvila.silikahorlogo
 
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -146,11 +147,7 @@ class StatisticsViewModel : ViewModel() {
         }
         statisticUpdater.run()
 
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                fetchGraph()
-            }
-        }
+        fetchGraph()
     }
 
     fun refresh() {
@@ -166,24 +163,31 @@ class StatisticsViewModel : ViewModel() {
     }
 
     fun fetchGraph() {
-        fetch("https://api.covidactnow.org/v2/state/WA.timeseries.json?apiKey=${CovidActNowKey}").let(::JSONObject)
-            .let {
-                it.getJSONArray("metricsTimeseries").let { data ->
-                    (data.length() - 1 downTo 0).map { i ->
-                        data.getJSONObject(i).optDouble("caseDensity", 0.0)
-                    }
-                }
-            }.let(graph::postValue)
-        fetch("https://api.covid19tracker.ca/reports/province/bc?fill_dates&stat=cases").let(
-            ::JSONObject
-        )
-            .let {
-                it.getJSONArray("data").let { data ->
-                    (data.length() - 1 downTo 0).map { i ->
-                        data.getJSONObject(i).optDouble("change_cases", 0.0)
-                    }
-                }
-            }.let(graph2::postValue)
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                Log.d("StatisticsViewModel", "Fetching graph data")
+                fetch("https://api.covidactnow.org/v2/state/WA.timeseries.json?apiKey=${CovidActNowKey}").let(
+                    ::JSONObject
+                )
+                    .let {
+                        it.getJSONArray("metricsTimeseries").let { data ->
+                            (data.length() - 1 downTo 0).map { i ->
+                                data.getJSONObject(i).optDouble("caseDensity", 0.0)
+                            }
+                        }
+                    }.let(graph::postValue)
+                fetch("https://api.covid19tracker.ca/reports/province/bc?fill_dates&stat=cases").let(
+                    ::JSONObject
+                )
+                    .let {
+                        it.getJSONArray("data").let { data ->
+                            (data.length() - 1 downTo 0).map { i ->
+                                data.getJSONObject(i).optDouble("change_cases", 0.0)
+                            }
+                        }
+                    }.let(graph2::postValue)
+            }
+        }
     }
 
     companion object {

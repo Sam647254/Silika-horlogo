@@ -317,22 +317,24 @@ class DataBarViewModel : ViewModel() {
 
     fun launch(requestQueue: RequestQueue) {
         this.requestQueue = requestQueue
-        handler = Handler(Looper.getMainLooper())
-        cacheTTL.forEach { (item, TTL) ->
-            val remover = object : Runnable {
-                override fun run() {
-                    fetchers[item.ordinal](requestQueue) { data ->
-                        updateDisplay(item, data)
+        if (!::handler.isInitialized) {
+            handler = Handler(Looper.getMainLooper())
+            cacheTTL.forEach { (item, TTL) ->
+                val remover = object : Runnable {
+                    override fun run() {
+                        fetchers[item.ordinal](requestQueue) { data ->
+                            updateDisplay(item, data)
+                        }
+                        handler.postDelayed(this, TTL * 1000L)
                     }
-                    handler.postDelayed(this, TTL * 1000L)
                 }
+                remover.run()
             }
-            remover.run()
-        }
-        shifter = object : Runnable {
-            override fun run() {
-                goToItem((currentItem + 1) % items.size)
-                handler.postDelayed(this, 15_000)
+            shifter = object : Runnable {
+                override fun run() {
+                    goToItem((currentItem + 1) % items.size)
+                    handler.postDelayed(this, 15_000)
+                }
             }
         }
         beginShifter()
@@ -353,8 +355,10 @@ class DataBarViewModel : ViewModel() {
         val currentItem = current.value ?: return
         cache.remove(currentItem)
         goToItem(currentItem.ordinal)
-        stopShifter()
-        beginShifter()
+        if (held.value == false) {
+            stopShifter()
+            beginShifter()
+        }
     }
 
     private fun beginShifter() {
