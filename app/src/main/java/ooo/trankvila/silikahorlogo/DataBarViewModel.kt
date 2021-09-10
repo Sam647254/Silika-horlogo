@@ -283,21 +283,34 @@ class DataBarViewModel : ViewModel() {
     }, { queue, cb ->
         queue.add(JsonArrayRequest(mealsUrl, { response ->
             val today = LocalDate.now()
-            val todayMenu = (0 until response.length()).first { i ->
+            val todayMenu = (0 until response.length()).firstOrNull { i ->
                 val date = response.getJSONObject(i).getString("date").let(LocalDate::parse)
                 date.equals(today)
-            }.let(response::getJSONObject)
-            val tomorrowMenu = (0 until response.length()).first { i ->
+            }?.let(response::getJSONObject)
+            val tomorrowMenu = (0 until response.length()).firstOrNull { i ->
                 val date = response.getJSONObject(i).getString("date").let(LocalDate::parse)
                 date.equals(today.plusDays(1))
-            }.let(response::getJSONObject)
+            }?.let(response::getJSONObject)
             val time = LocalTime.now().hourOfDay
-            val todayLunch = DataBarFieldData(todayMenu.optString("lunch"), "", "Today's lunch")
-            val todayDinner = DataBarFieldData(todayMenu.optString("dinner"), "", "Today's dinner")
+            val todayLunch =
+                DataBarFieldData(todayMenu?.optString("lunch") ?: "Unplanned", "", "Today's lunch")
+            val todayDinner = DataBarFieldData(
+                todayMenu?.optString("dinner") ?: "Unplanned",
+                "",
+                "Today's dinner"
+            )
             val tomorrowLunch =
-                DataBarFieldData(tomorrowMenu.optString("lunch"), "", "Tomorrow's lunch")
+                DataBarFieldData(
+                    tomorrowMenu?.optString("lunch") ?: "Unplanned",
+                    "",
+                    "Tomorrow's lunch"
+                )
             val tomorrowDinner =
-                DataBarFieldData(tomorrowMenu.optString("dinner"), "", "Tomorrow's dinner")
+                DataBarFieldData(
+                    tomorrowMenu?.optString("dinner") ?: "Unplanned",
+                    "",
+                    "Tomorrow's dinner"
+                )
             val menu = when {
                 time < 15 -> {
                     DataBar(listOf(todayLunch, todayDinner))
