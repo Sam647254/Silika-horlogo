@@ -24,7 +24,7 @@ fun Fonto(stats: List<Double>, stats2: List<Double>) {
             val dx = size.width - index * (barWidth + gap) - barWidth
             val dy = bar / max * 0.99F * size.height / 2
             drawRect(
-                Color.White.copy(alpha = 0.3F),
+                Color.White.copy(alpha = 0.2F),
                 Offset(dx, (size.height - dy).toFloat()),
                 Size(barWidth, dy.toFloat())
             )
@@ -35,7 +35,7 @@ fun Fonto(stats: List<Double>, stats2: List<Double>) {
         bars2.forEachIndexed { index, bar ->
             val dx = size.width - index * (barWidth + gap) - barWidth
             drawRect(
-                Color.White.copy(alpha = 0.3F),
+                Color.White.copy(alpha = 0.2F),
                 Offset(dx, 0F),
                 Size(barWidth, (bar / max2 * 0.99F * size.height / 2).toFloat())
             )

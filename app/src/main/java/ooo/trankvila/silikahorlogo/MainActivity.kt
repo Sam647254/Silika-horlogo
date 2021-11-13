@@ -1,6 +1,7 @@
 package ooo.trankvila.silikahorlogo
 
 import android.content.Context
+import android.media.RingtoneManager
 import android.os.Bundle
 import android.view.View
 import android.view.Window
@@ -105,12 +106,27 @@ class MainActivity : AppCompatActivity() {
                             }
                         }, useSilican = clockFormatState.value)
                     }
+                    Box(modifier = Modifier
+                        .offset(y = 440.dp)
+                        .fillMaxWidth()
+                        .height(40.dp)) {
+                        Pomodoro {
+                            RingtoneManager.getRingtone(
+                                applicationContext,
+                                RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+                            ).play()
+                        }
+                    }
                     Box(
                         Modifier
                             .fillMaxSize()
                             .padding(30.dp), contentAlignment = Alignment.BottomCenter
                     ) {
-                        DataCategoryBar(dataBarItemState, dataBarHeldState, dataBarViewModel::holdSelected)
+                        DataCategoryBar(
+                            dataBarItemState,
+                            dataBarHeldState,
+                            dataBarViewModel::holdSelected
+                        )
                     }
                 }
             }
