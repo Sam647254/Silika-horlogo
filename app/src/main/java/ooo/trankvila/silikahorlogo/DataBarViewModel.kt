@@ -199,7 +199,7 @@ class DataBarViewModel : ViewModel() {
                             },
                             DataBarFieldData(
                                 StatisticsViewModel.formatNumber(total),
-                                "(%.2f%%)".format(net * 100.0 / population),
+                                "",
                                 label = "Total vaccinations"
                             ),
                             bcData.optInt("change_vaccinations").let { new ->
