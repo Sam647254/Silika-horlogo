@@ -21,7 +21,8 @@ import java.util.*
 class DataBarViewModel : ViewModel() {
     val current = MutableLiveData(DataBarItem.CurrentWeather)
     val currentData = MutableLiveData<DataBar?>(null)
-    val held = MutableLiveData(false)
+    val secondData = MutableLiveData<DataBar?>(null)
+    val held = MutableLiveData(true)
     private val items = DataBarItem.values()
     private var currentItem = items.size - 1
     private val cache = mutableMapOf<DataBarItem, DataBar>()
@@ -374,12 +375,15 @@ class DataBarViewModel : ViewModel() {
         }
     }
 
+    fun refreshSecond() {
+    }
+
     private fun beginShifter() {
-        handler.postDelayed(shifter, 15_000)
+        // handler.postDelayed(shifter, 15_000)
     }
 
     private fun stopShifter() {
-        handler.removeCallbacks(shifter)
+        // handler.removeCallbacks(shifter)
     }
 
     private fun goToItem(item: Int) {
@@ -396,8 +400,13 @@ class DataBarViewModel : ViewModel() {
     }
 
     private fun updateDisplay(item: DataBarItem, dataBar: DataBar) {
-        if (current.value == item) {
+//        if (current.value == item) {
+//            currentData.postValue(dataBar)
+//        }
+        if (item == DataBarItem.CurrentWeather) {
             currentData.postValue(dataBar)
+        } else if (item == DataBarItem.IndoorConditions) {
+            secondData.postValue(dataBar)
         }
         cache[item] = dataBar
     }

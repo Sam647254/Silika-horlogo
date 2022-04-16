@@ -16,7 +16,7 @@ import ooo.trankvila.silikahorlogo.ui.shadow
 
 @Composable
 fun TickerTape(entry: TickerTapeEntry) {
-    Crossfade(current = entry) {
+    Crossfade(entry) { entry ->
         Text(
             text = entry.title,
             modifier = Modifier.fillMaxWidth().padding(top = 10.dp)

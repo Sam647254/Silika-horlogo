@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.annotatedString
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,7 +51,7 @@ fun StatisticDisplay(
             is TimeData -> {
                 val time = SilicanTime.fromStandard(statistic.time)
                 Text(
-                    text = annotatedString {
+                    text = buildAnnotatedString {
                         pushStyle(SpanStyle(fontSize = 80.sp, color = phases[time.phase]))
                         append(time.hour.toString())
                         append(' ')
@@ -75,7 +74,7 @@ fun StatisticDisplay(
                 val text1 = statistic.text1()
                 val text2 = statistic.text2?.invoke()
                 Text(
-                    text = annotatedString {
+                    text = buildAnnotatedString {
                         pushStyle(SpanStyle(fontSize = 80.sp))
                         append(text1)
                         text2?.let {

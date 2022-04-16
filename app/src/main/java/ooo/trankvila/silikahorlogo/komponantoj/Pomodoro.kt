@@ -2,8 +2,6 @@ package ooo.trankvila.silikahorlogo.komponantoj
 
 import android.os.Handler
 import android.os.Looper
-import androidx.compose.animation.animate
-import androidx.compose.animation.animatedFloat
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
