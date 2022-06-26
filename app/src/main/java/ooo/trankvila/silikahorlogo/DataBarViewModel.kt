@@ -5,6 +5,7 @@ import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.android.volley.Request
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.JsonArrayRequest
 import com.android.volley.toolbox.JsonObjectRequest
@@ -36,7 +37,8 @@ class DataBarViewModel : ViewModel() {
     private val fetchers: List<(RequestQueue, (DataBar) -> Unit) -> Unit> = listOf({ queue, cb ->
         // Current weather
         queue.add(JsonObjectRequest(
-            "https://api.openweathermap.org/data/2.5/weather?id=5786882&appid=${weatherApiKey}&units=metric",
+            Request.Method.GET,
+            "https://api.openweathermap.org/data/2.5/weather?id=5799841&appid=${weatherApiKey}&units=metric",
             null,
             { response ->
                 val time = DateTime(
@@ -98,7 +100,7 @@ class DataBarViewModel : ViewModel() {
                             )
                         }
                     ),
-                    "Weather in Bellevue, WA as of $date (OpenWeatherMap.org)"
+                    "Weather in Kirkland, WA as of $date (OpenWeatherMap.org)"
                 )
                 cb(dataBar)
             }, { error ->
@@ -107,7 +109,7 @@ class DataBarViewModel : ViewModel() {
         ))
     }, { queue, cb ->
         // Awair data
-        queue.add(JsonObjectRequest("http://10.0.0.207/air-data/latest", null, { response ->
+        queue.add(JsonObjectRequest("http://192.168.1.4/air-data/latest", null, { response ->
             val time = DateTime(response.getString("timestamp"), DateTimeZone.UTC)
             val date = SilicanDateTime.fromLocalDateTime(
                 time.withZone(
