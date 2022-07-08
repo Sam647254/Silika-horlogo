@@ -16,8 +16,11 @@ class AwairViewModel: ViewModel() {
         val handler = Handler(Looper.getMainLooper())
         val awairUpdater = object : Runnable {
             override fun run() {
-                requestQueue.add(StringRequest("http://192.168.1.4/air-data/latest", {
-                    JSONObject(it).let { response ->
+                requestQueue.add(StringRequest("http://192.168.1.4/air-data/latest", { text ->
+                    if (text.isEmpty()) {
+                        return@StringRequest
+                    }
+                    JSONObject(text).let { response ->
                         AwairData(
                             response.getInt("score"),
                             response.getDouble("temp"),
